@@ -26,6 +26,17 @@ except ImportError:
                      'falling back to (slower) Python encryption')
 
 
+def _xor16(a, b):
+    """
+    XOR two 16-byte sequences as a single big-integer operation.
+
+    This is markedly faster than a per-byte Python loop (which the previous
+    implementation ran twice per block), and keeps the pure-Python fallback
+    bit-for-bit identical to the ``cryptg`` / ``libssl`` fast paths.
+    """
+    return (int.from_bytes(a, 'big') ^ int.from_bytes(b, 'big')).to_bytes(16, 'big')
+
+
 class AES:
     """
     Class that servers as an interface to encrypt and decrypt
@@ -42,31 +53,21 @@ class AES:
         if libssl.decrypt_ige:
             return libssl.decrypt_ige(cipher_text, key, iv)
 
-        iv1 = iv[:len(iv) // 2]
-        iv2 = iv[len(iv) // 2:]
-
         aes = pyaes.AES(key)
+        iv1 = iv[:16]      # previous ciphertext block
+        iv2 = iv[16:32]    # previous plaintext block
 
-        plain_text = []
-        blocks_count = len(cipher_text) // 16
+        out = bytearray(len(cipher_text))
+        for off in range(0, len(cipher_text), 16):
+            cblock = cipher_text[off:off + 16]
+            tmp = _xor16(cblock, iv2)
+            dec = bytes(aes.decrypt(list(tmp)))
+            plain = _xor16(dec, iv1)
+            out[off:off + 16] = plain
+            iv1 = cblock
+            iv2 = plain
 
-        cipher_text_block = [0] * 16
-        for block_index in range(blocks_count):
-            for i in range(16):
-                cipher_text_block[i] = \
-                    cipher_text[block_index * 16 + i] ^ iv2[i]
-
-            plain_text_block = aes.decrypt(cipher_text_block)
-
-            for i in range(16):
-                plain_text_block[i] ^= iv1[i]
-
-            iv1 = cipher_text[block_index * 16:block_index * 16 + 16]
-            iv2 = plain_text_block
-
-            plain_text.extend(plain_text_block)
-
-        return bytes(plain_text)
+        return bytes(out)
 
     @staticmethod
     def encrypt_ige(plain_text, key, iv):
@@ -83,29 +84,18 @@ class AES:
         if libssl.encrypt_ige:
             return libssl.encrypt_ige(plain_text, key, iv)
 
-        iv1 = iv[:len(iv) // 2]
-        iv2 = iv[len(iv) // 2:]
-
         aes = pyaes.AES(key)
+        iv1 = iv[:16]      # previous ciphertext block
+        iv2 = iv[16:32]    # previous plaintext block
 
-        cipher_text = []
-        blocks_count = len(plain_text) // 16
+        out = bytearray(len(plain_text))
+        for off in range(0, len(plain_text), 16):
+            block = plain_text[off:off + 16]
+            tmp = _xor16(block, iv1)
+            enc = bytes(aes.encrypt(list(tmp)))
+            cipher = _xor16(enc, iv2)
+            out[off:off + 16] = cipher
+            iv1 = cipher
+            iv2 = block
 
-        for block_index in range(blocks_count):
-            plain_text_block = list(
-                plain_text[block_index * 16:block_index * 16 + 16]
-            )
-            for i in range(16):
-                plain_text_block[i] ^= iv1[i]
-
-            cipher_text_block = aes.encrypt(plain_text_block)
-
-            for i in range(16):
-                cipher_text_block[i] ^= iv2[i]
-
-            iv1 = cipher_text_block
-            iv2 = plain_text[block_index * 16:block_index * 16 + 16]
-
-            cipher_text.extend(cipher_text_block)
-
-        return bytes(cipher_text)
+        return bytes(out)
