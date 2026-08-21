@@ -1,0 +1,8 @@
+[run]
+branch = true
+parallel = true
+source =
+    nsplusthon
+
+[report]
+precision = 2
