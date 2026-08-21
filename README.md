@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.svg" width="180" alt="NSplusthon Logo">
+<img src="logo.png" width="200" alt="NSplusthon Logo">
 
 <h1>NSplusthon</h1>
 
