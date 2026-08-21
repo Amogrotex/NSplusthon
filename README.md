@@ -81,6 +81,24 @@
 - رمزنگاری RSA و AES
 - بدون نیاز به API ID و API Hash
 - API مشابه Telethon برای مهاجرت آسان
+- مسیر OpenSSL سریع‌تر از SPlusthon / spluspy (AES-IGE)
+
+## عملکرد
+
+بنچمارک AES-IGE روی مسیر **libssl** (بدون cryptg)، ۲۵۶ کیلوبایت،
+Intel Xeon @ 2.60GHz، Python 3.13.14، بهترینِ ۹ اجرا.
+خروجی با مرجع C بیت‌به‌بیت یکسان بود.
+
+| کتابخانه   | زمان رمز | سرعت          |
+| ---------- | -------- | ------------- |
+| NSplusthon | 2.50 ms  | **100.1 MiB/s** |
+| SPlusthon  | 44.86 ms | 5.6 MiB/s     |
+| spluspy    | 42.47 ms | 5.9 MiB/s     |
+
+NSplusthon روی این مسیر حدود **۱۸ برابر** SPlusthon است
+(`from_buffer_copy` به‌جای کپی بایت‌به‌بایت).
+
+اسکریپت: [`benchmarks/aes_ige_bench.py`](benchmarks/aes_ige_bench.py)
 
 ## نصب
 

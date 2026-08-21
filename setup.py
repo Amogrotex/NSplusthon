@@ -221,8 +221,10 @@ def main(argv):
             url='https://github.com/Amogrotex/NSplusthon',
             download_url='https://github.com/Amogrotex/NSplusthon/releases',
 
-            author='ShayanHeidari',
-            author_email='contact@shayanheidari.info',
+            author='AmoGrotex',
+            author_email='Amogrotex@users.noreply.github.com',
+            maintainer='AmoGrotex',
+            maintainer_email='Amogrotex@users.noreply.github.com',
 
             license='GPL-3.0',
 
@@ -248,8 +250,13 @@ def main(argv):
                 'Programming Language :: Python :: 3.6',
                 'Programming Language :: Python :: 3.7',
                 'Programming Language :: Python :: 3.8',
+                'Programming Language :: Python :: 3.9',
+                'Programming Language :: Python :: 3.10',
+                'Programming Language :: Python :: 3.11',
+                'Programming Language :: Python :: 3.12',
+                'Programming Language :: Python :: 3.13',
             ],
-            keywords='telegram api chat client library messaging mtproto',
+            keywords='soroush splus nsplusthon telegram api chat client library messaging mtproto',
             packages=find_packages(exclude=[
                 'nsplusthon_*', 'tests*'
             ]),
