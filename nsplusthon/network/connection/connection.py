@@ -239,9 +239,34 @@ class Connection(abc.ABC):
 
             self._reader, self._writer = await asyncio.open_connection(sock=sock)
 
+        self._apply_socket_options()
+
         self._codec = self.packet_codec(self)
         self._init_conn()
         await self._writer.drain()
+
+    def _apply_socket_options(self):
+        """
+        Tune the underlying TCP socket for lower latency and throughput.
+
+        MTProto exchanges many small request/response packets, so disabling
+        Nagle's algorithm (TCP_NODELAY) materially reduces latency, and larger
+        send/receive buffers help with media uploads/downloads. All settings
+        are best-effort and silently ignored if the platform/transport does
+        not expose a raw socket (e.g. some proxied or SSL-wrapped sockets).
+        """
+        sock = self._writer.get_extra_info('socket')
+        if sock is None:
+            return
+        try:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
+        for opt in (socket.SO_SNDBUF, socket.SO_RCVBUF):
+            try:
+                sock.setsockopt(socket.SOL_SOCKET, opt, 256 * 1024)
+            except OSError:
+                pass
 
     async def connect(self, timeout=None, ssl=None):
         """

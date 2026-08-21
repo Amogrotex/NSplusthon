@@ -96,11 +96,14 @@ else:
     def decrypt_ige(cipher_text, key, iv):
         aes_key = AES_KEY()
         key_len = ctypes.c_int(8 * len(key))
-        key = (ctypes.c_ubyte * len(key))(*key)
-        iv = (ctypes.c_ubyte * len(iv))(*iv)
+        # from_buffer_copy does a single C-level memcpy instead of copying
+        # the data one byte at a time; this is what makes the ctypes path
+        # competitive with the compiled cryptg extension.
+        key = (ctypes.c_ubyte * len(key)).from_buffer_copy(key)
+        iv = (ctypes.c_ubyte * len(iv)).from_buffer_copy(iv)
 
         in_len = ctypes.c_size_t(len(cipher_text))
-        in_ptr = (ctypes.c_ubyte * len(cipher_text))(*cipher_text)
+        in_ptr = (ctypes.c_ubyte * len(cipher_text)).from_buffer_copy(cipher_text)
         out_ptr = (ctypes.c_ubyte * len(cipher_text))()
 
         _libssl.AES_set_decrypt_key(key, key_len, ctypes.byref(aes_key))
@@ -118,11 +121,14 @@ else:
     def encrypt_ige(plain_text, key, iv):
         aes_key = AES_KEY()
         key_len = ctypes.c_int(8 * len(key))
-        key = (ctypes.c_ubyte * len(key))(*key)
-        iv = (ctypes.c_ubyte * len(iv))(*iv)
+        # from_buffer_copy does a single C-level memcpy instead of copying
+        # the data one byte at a time; this is what makes the ctypes path
+        # competitive with the compiled cryptg extension.
+        key = (ctypes.c_ubyte * len(key)).from_buffer_copy(key)
+        iv = (ctypes.c_ubyte * len(iv)).from_buffer_copy(iv)
 
         in_len = ctypes.c_size_t(len(plain_text))
-        in_ptr = (ctypes.c_ubyte * len(plain_text))(*plain_text)
+        in_ptr = (ctypes.c_ubyte * len(plain_text)).from_buffer_copy(plain_text)
         out_ptr = (ctypes.c_ubyte * len(plain_text))()
 
         _libssl.AES_set_encrypt_key(key, key_len, ctypes.byref(aes_key))
