@@ -101,7 +101,6 @@ nav:
   - شروع سریع: quick-start.md
   - نصب و راه‌اندازی: installation.md
   - مقایسه: compare.md
-  - مهاجرت از SPlusthon: migration.md
   - مفاهیم پایه:
       - concepts/index.md
       - "Entity (موجودیت)": concepts/entities.md
