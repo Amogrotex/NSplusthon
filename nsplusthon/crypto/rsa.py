@@ -1,6 +1,7 @@
 """
 This module holds several utilities regarding RSA and server fingerprints.
 """
+import logging
 import os
 import struct
 from hashlib import sha1
@@ -12,6 +13,8 @@ except ImportError:
     raise ImportError('Missing module "rsa", please install via pip.')
 
 from ..tl import TLObject
+
+__log__ = logging.getLogger(__name__)
 
 
 # {fingerprint: (Crypto.PublicKey.RSA._RSAobj, old)} dictionary
@@ -68,6 +71,18 @@ def encrypt(fingerprint, data, *, use_old=False):
     global _server_keys
     key, old = _server_keys.get(fingerprint, [None, None])
     if (not key) or (old and not use_old):
+        # Surface the failure: a silent None here makes DC connections fail
+        # with a very confusing auth error far away from the root cause.
+        # Note: the bundled default keys are all registered old=False; if
+        # the server ever requests an *old* key id, it must be registered
+        # first via add_key(..., old=True) (see the Soroush JS client).
+        if not key:
+            __log__.warning(
+                'No RSA key registered for fingerprint %s — cannot encrypt; '
+                'connection/auth using this key will fail', fingerprint)
+        else:
+            __log__.debug(
+                'Refusing to use old RSA key %s without use_old=True', fingerprint)
         return None
 
     # len(sha1.digest) is always 20, so we're left with 255 - 20 - x padding
