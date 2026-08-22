@@ -180,6 +180,13 @@ class MTProtoSender:
         if not self._user_connected:
             raise ConnectionError('Cannot send requests while disconnected')
 
+        if self._ping is None:
+            # Keepalive: piggyback a ping on outgoing traffic so the
+            # _RECV_TIMEOUT watchdog in _recv_loop doesn't mistake a quiet
+            # but healthy connection for a dead one (an idle session with
+            # no updates would otherwise force-reconnect every 90s).
+            self._keepalive_ping(helpers.generate_random_long())
+
         if not utils.is_list_like(request):
             try:
                 state = RequestState(request)
