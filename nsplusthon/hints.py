@@ -1,47 +1,58 @@
+"""Public type aliases for NSplusthon (Python 3.9+)."""
+
+from __future__ import annotations
+
 import datetime
-import typing
+from typing import BinaryIO, Callable, Optional, Sequence, Type, Union
 
 from . import helpers
-from .tl import types, custom
+from .tl import custom, types
 
 Phone = str
 Username = str
 PeerID = int
-Entity = typing.Union[types.User, types.Chat, types.Channel]
-FullEntity = typing.Union[types.UserFull, types.messages.ChatFull, types.ChatFull, types.ChannelFull]
+Entity = Union[types.User, types.Chat, types.Channel]
+FullEntity = Union[
+    types.UserFull,
+    types.messages.ChatFull,
+    types.ChatFull,
+    types.ChannelFull,
+]
 
-EntityLike = typing.Union[
+EntityLike = Union[
     Phone,
     Username,
     PeerID,
     types.TypePeer,
     types.TypeInputPeer,
     Entity,
-    FullEntity
+    FullEntity,
 ]
-EntitiesLike = typing.Union[EntityLike, typing.Sequence[EntityLike]]
+EntitiesLike = Union[EntityLike, Sequence[EntityLike]]
 
-ButtonLike = typing.Union[types.TypeKeyboardButton, custom.Button]
-MarkupLike = typing.Union[
+ButtonLike = Union[types.TypeKeyboardButton, custom.Button]
+MarkupLike = Union[
     types.TypeReplyMarkup,
     ButtonLike,
-    typing.Sequence[ButtonLike],
-    typing.Sequence[typing.Sequence[ButtonLike]]
+    Sequence[ButtonLike],
+    Sequence[Sequence[ButtonLike]],
 ]
 
 TotalList = helpers.TotalList
 
-DateLike = typing.Optional[typing.Union[float, datetime.datetime, datetime.date, datetime.timedelta]]
+DateLike = Optional[
+    Union[float, datetime.datetime, datetime.date, datetime.timedelta]
+]
 
 LocalPath = str
 ExternalUrl = str
 BotFileID = str
-FileLike = typing.Union[
+FileLike = Union[
     LocalPath,
     ExternalUrl,
     BotFileID,
     bytes,
-    typing.BinaryIO,
+    BinaryIO,
     types.TypeMessageMedia,
     types.TypeInputFile,
     types.TypeInputFileLocation,
@@ -49,24 +60,34 @@ FileLike = typing.Union[
     types.TypePhoto,
     types.TypeInputPhoto,
     types.TypeDocument,
-    types.TypeInputDocument
+    types.TypeInputDocument,
 ]
 
-# Can't use `typing.Type` in Python 3.5.2
-# See https://github.com/python/typing/issues/266
-try:
-    OutFileLike = typing.Union[
-        str,
-        typing.Type[bytes],
-        typing.BinaryIO
-    ]
-except TypeError:
-    OutFileLike = typing.Union[
-        str,
-        typing.BinaryIO
-    ]
+OutFileLike = Union[str, Type[bytes], BinaryIO]
 
-MessageLike = typing.Union[str, types.Message]
-MessageIDLike = typing.Union[int, types.Message, types.TypeInputMessage]
+MessageLike = Union[str, types.Message]
+MessageIDLike = Union[int, types.Message, types.TypeInputMessage]
 
-ProgressCallback = typing.Callable[[int, int], None]
+ProgressCallback = Callable[[int, int], None]
+
+__all__ = [
+    "Phone",
+    "Username",
+    "PeerID",
+    "Entity",
+    "FullEntity",
+    "EntityLike",
+    "EntitiesLike",
+    "ButtonLike",
+    "MarkupLike",
+    "TotalList",
+    "DateLike",
+    "LocalPath",
+    "ExternalUrl",
+    "BotFileID",
+    "FileLike",
+    "OutFileLike",
+    "MessageLike",
+    "MessageIDLike",
+    "ProgressCallback",
+]

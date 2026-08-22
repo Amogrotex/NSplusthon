@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-"""A setuptools based setup module.
+"""NSplusthon setup.
 
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
-
-Extra supported commands are:
-* gen, to generate the classes required for NSplusthon to run or docs
-* pypi, to generate sdist, bdist_wheel, and push to PyPi
+Metadata lives in pyproject.toml. This file keeps:
+* ``python setup.py gen|clean`` — regenerate TL / errors / docs
+* ``python setup.py pypi`` — build + upload
+* a ``build_py`` hook so editable / sdist builds refresh generated code
 """
 
 import itertools
@@ -20,22 +17,21 @@ import urllib.request
 from pathlib import Path
 from subprocess import run
 
-from setuptools import find_packages, setup
+from setuptools import setup
+from setuptools.command.build_py import build_py as _build_py
 
-# Needed since we're importing local files
 sys.path.insert(0, os.path.dirname(__file__))
 
+
 class TempWorkDir:
-    """Switches the working directory to be the one on which this file lives,
-       while within the 'with' block.
-    """
+    """Switch cwd to this file's directory inside the ``with`` block."""
+
     def __init__(self, new=None):
         self.original = None
         self.new = new or str(Path(__file__).parent.resolve())
 
     def __enter__(self):
-        # os.chdir does not work with Path in Python 3.5.x
-        self.original = str(Path('.').resolve())
+        self.original = str(Path(".").resolve())
         os.makedirs(self.new, exist_ok=True)
         os.chdir(self.new)
         return self
@@ -44,74 +40,75 @@ class TempWorkDir:
         os.chdir(self.original)
 
 
-API_REF_URL = 'https://tl.nsplusthon.dev/'
+API_REF_URL = "https://tl.nsplusthon.dev/"
 
-GENERATOR_DIR = Path('nsplusthon_generator')
-LIBRARY_DIR = Path('nsplusthon')
+GENERATOR_DIR = Path("nsplusthon_generator")
+LIBRARY_DIR = Path("nsplusthon")
 
-ERRORS_IN = GENERATOR_DIR / 'data/errors.csv'
-ERRORS_OUT = LIBRARY_DIR / 'errors/rpcerrorlist.py'
+ERRORS_IN = GENERATOR_DIR / "data/errors.csv"
+ERRORS_OUT = LIBRARY_DIR / "errors/rpcerrorlist.py"
 
-METHODS_IN = GENERATOR_DIR / 'data/methods.csv'
+METHODS_IN = GENERATOR_DIR / "data/methods.csv"
+FRIENDLY_IN = GENERATOR_DIR / "data/friendly.csv"
 
-# Which raw API methods are covered by *friendly* methods in the client?
-FRIENDLY_IN = GENERATOR_DIR / 'data/friendly.csv'
-
-TLOBJECT_IN_TLS = [Path(x) for x in GENERATOR_DIR.glob('data/*.tl')]
-TLOBJECT_OUT = LIBRARY_DIR / 'tl'
+TLOBJECT_IN_TLS = [Path(x) for x in GENERATOR_DIR.glob("data/*.tl")]
+TLOBJECT_OUT = LIBRARY_DIR / "tl"
 IMPORT_DEPTH = 2
 
-DOCS_IN_RES = GENERATOR_DIR / 'data/html'
-DOCS_OUT = Path('docs')
+DOCS_IN_RES = GENERATOR_DIR / "data/html"
+DOCS_OUT = Path("docs")
 
 
-def generate(which, action='gen'):
-    from nsplusthon_generator.parsers import\
-        parse_errors, parse_methods, parse_tl, find_layer
-
-    from nsplusthon_generator.generators import\
-        generate_errors, generate_tlobjects, generate_docs, clean_tlobjects
+def generate(which, action="gen"):
+    from nsplusthon_generator.parsers import find_layer, parse_errors, parse_methods, parse_tl
+    from nsplusthon_generator.generators import (
+        clean_tlobjects,
+        generate_docs,
+        generate_errors,
+        generate_tlobjects,
+    )
 
     layer = next(filter(None, map(find_layer, TLOBJECT_IN_TLS)))
     errors = list(parse_errors(ERRORS_IN))
     methods = list(parse_methods(METHODS_IN, FRIENDLY_IN, {e.str_code: e for e in errors}))
 
-    tlobjects = list(itertools.chain(*(
-        parse_tl(file, layer, methods) for file in TLOBJECT_IN_TLS)))
+    tlobjects = list(
+        itertools.chain(*(parse_tl(file, layer, methods) for file in TLOBJECT_IN_TLS))
+    )
 
     if not which:
-        which.extend(('tl', 'errors'))
+        which.extend(("tl", "errors"))
 
-    clean = action == 'clean'
-    action = 'Cleaning' if clean else 'Generating'
+    clean = action == "clean"
+    action_name = "Cleaning" if clean else "Generating"
 
-    if 'all' in which:
-        which.remove('all')
-        for x in ('tl', 'errors', 'docs'):
+    if "all" in which:
+        which.remove("all")
+        for x in ("tl", "errors", "docs"):
             if x not in which:
                 which.append(x)
 
-    if 'tl' in which:
-        which.remove('tl')
-        print(action, 'TLObjects...')
+    if "tl" in which:
+        which.remove("tl")
+        print(action_name, "TLObjects...")
         if clean:
             clean_tlobjects(TLOBJECT_OUT)
         else:
             generate_tlobjects(tlobjects, layer, IMPORT_DEPTH, TLOBJECT_OUT)
 
-    if 'errors' in which:
-        which.remove('errors')
-        print(action, 'RPCErrors...')
+    if "errors" in which:
+        which.remove("errors")
+        print(action_name, "RPCErrors...")
         if clean:
             if ERRORS_OUT.is_file():
                 ERRORS_OUT.unlink()
         else:
-            with ERRORS_OUT.open('w') as file:
+            with ERRORS_OUT.open("w") as file:
                 generate_errors(errors, file)
 
-    if 'docs' in which:
-        which.remove('docs')
-        print(action, 'documentation...')
+    if "docs" in which:
+        which.remove("docs")
+        print(action_name, "documentation...")
         if clean:
             if DOCS_OUT.is_dir():
                 shutil.rmtree(str(DOCS_OUT))
@@ -120,15 +117,16 @@ def generate(which, action='gen'):
             with TempWorkDir(DOCS_OUT):
                 generate_docs(tlobjects, methods, layer, in_path)
 
-    if 'json' in which:
-        which.remove('json')
-        print(action, 'JSON schema...')
-        json_files = [x.with_suffix('.json') for x in TLOBJECT_IN_TLS]
+    if "json" in which:
+        which.remove("json")
+        print(action_name, "JSON schema...")
+        json_files = [x.with_suffix(".json") for x in TLOBJECT_IN_TLS]
         if clean:
             for file in json_files:
                 if file.is_file():
                     file.unlink()
         else:
+
             def gen_json(fin, fout):
                 meths = []
                 constructors = []
@@ -137,8 +135,8 @@ def generate(which, action='gen'):
                         meths.append(tl.to_dict())
                     else:
                         constructors.append(tl.to_dict())
-                what = {'constructors': constructors, 'methods': meths}
-                with open(fout, 'w') as f:
+                what = {"constructors": constructors, "methods": meths}
+                with open(fout, "w") as f:
                     json.dump(what, f, indent=2)
 
             for fs in zip(TLOBJECT_IN_TLS, json_files):
@@ -146,127 +144,76 @@ def generate(which, action='gen'):
 
     if which:
         print(
-            'The following items were not understood:', which,
+            "The following items were not understood:",
+            which,
             '\n  Consider using only "tl", "errors" and/or "docs".'
             '\n  Using only "clean" will clean them. "all" to act on all.'
-            '\n  For instance "gen tl errors".'
+            '\n  For instance "gen tl errors".',
         )
 
 
-def main(argv):
-    if len(argv) >= 2 and argv[1] in ('gen', 'clean'):
-        generate(argv[2:], argv[1])
+class build_py(_build_py):
+    """Generate TL/errors only when the compiled modules are missing."""
 
-    elif len(argv) >= 2 and argv[1] == 'pypi':
-        # Make sure tl.nsplusthon.dev is up-to-date first
-        with urllib.request.urlopen(API_REF_URL) as resp:
-            html = resp.read()
-            m = re.search(br'layer\s+(\d+)', html)
-            if not m:
-                print('Failed to check that the API reference is up to date:', API_REF_URL)
-                return
+    def run(self):
+        compiled = TLOBJECT_OUT / "alltlobjects.py"
+        if GENERATOR_DIR.is_dir() and not compiled.is_file():
+            generate(["tl", "errors"])
+        super().run()
 
-            from nsplusthon_generator.parsers import find_layer
-            layer = next(filter(None, map(find_layer, TLOBJECT_IN_TLS)))
-            published_layer = int(m[1])
-            if published_layer != layer:
-                print('Published layer', published_layer, 'does not match current layer', layer, '.')
-                print('Make sure to update the API reference site first:', API_REF_URL)
-                return
 
-        # (Re)generate the code to make sure we don't push without it
-        generate(['tl', 'errors'])
-
-        # Try importing the nsplusthon module to assert it has no errors
-        try:
-            import nsplusthon
-        except Exception as e:
-            print('Packaging for PyPi aborted, importing the module failed.')
-            print(e)
+def _upload_pypi():
+    with urllib.request.urlopen(API_REF_URL) as resp:
+        html = resp.read()
+        m = re.search(br"layer\s+(\d+)", html)
+        if not m:
+            print("Failed to check that the API reference is up to date:", API_REF_URL)
             return
 
-        remove_dirs = ['__pycache__', 'build', 'dist', 'NSplusthon.egg-info']
-        for root, _dirs, _files in os.walk(LIBRARY_DIR, topdown=False):
-            # setuptools is including __pycache__ for some reason (#1605)
-            if root.endswith('/__pycache__'):
-                remove_dirs.append(root)
-        for x in remove_dirs:
-            shutil.rmtree(x, ignore_errors=True)
+        from nsplusthon_generator.parsers import find_layer
 
-        run('python3 setup.py sdist', shell=True)
-        run('python3 setup.py bdist_wheel', shell=True)
-        run('twine upload dist/*', shell=True)
-        for x in ('build', 'dist', 'NSplusthon.egg-info'):
-            shutil.rmtree(x, ignore_errors=True)
+        layer = next(filter(None, map(find_layer, TLOBJECT_IN_TLS)))
+        published_layer = int(m[1])
+        if published_layer != layer:
+            print(
+                "Published layer",
+                published_layer,
+                "does not match current layer",
+                layer,
+                ".",
+            )
+            print("Make sure to update the API reference site first:", API_REF_URL)
+            return
 
-    else:
-        # e.g. install from GitHub
-        if GENERATOR_DIR.is_dir():
-            generate(['tl', 'errors'])
+    generate(["tl", "errors"])
 
-        # Get the long description from the README file
-        with open('README.md', 'r', encoding='utf-8') as f:
-            long_description = f.read()
+    try:
+        import nsplusthon  # noqa: F401
+    except Exception as e:
+        print("Packaging for PyPI aborted, importing the module failed.")
+        print(e)
+        return
 
-        with open('nsplusthon/version.py', 'r', encoding='utf-8') as f:
-            version = re.search(r"^__version__\s*=\s*'(.*)'.*$",
-                                f.read(), flags=re.MULTILINE).group(1)
-        setup(
-            name='NSplusthon',
-            version=version,
-            description="Soroush Plus library for Python",
-            long_description=long_description,
-            long_description_content_type='text/markdown',
+    remove_dirs = ["__pycache__", "build", "dist", "NSplusthon.egg-info"]
+    for root, _dirs, _files in os.walk(LIBRARY_DIR, topdown=False):
+        if root.endswith("/__pycache__"):
+            remove_dirs.append(root)
+    for x in remove_dirs:
+        shutil.rmtree(x, ignore_errors=True)
 
-            url='https://github.com/Amogrotex/NSplusthon',
-            download_url='https://github.com/Amogrotex/NSplusthon/releases',
-
-            author='AmoGrotex',
-            author_email='Amogrotex@users.noreply.github.com',
-            maintainer='AmoGrotex',
-            maintainer_email='Amogrotex@users.noreply.github.com',
-
-            license='GPL-3.0',
-
-            # See https://stackoverflow.com/a/40300957/4759433
-            # -> https://www.python.org/dev/peps/pep-0345/#requires-python
-            # -> http://setuptools.readthedocs.io/en/latest/setuptools.html
-            python_requires='>=3.5',
-
-            # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-            classifiers=[
-                #   3 - Alpha
-                #   4 - Beta
-                #   5 - Production/Stable
-                'Development Status :: 5 - Production/Stable',
-
-                'Intended Audience :: Developers',
-                'Topic :: Communications :: Chat',
-
-                'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-
-                'Programming Language :: Python :: 3',
-                'Programming Language :: Python :: 3.5',
-                'Programming Language :: Python :: 3.6',
-                'Programming Language :: Python :: 3.7',
-                'Programming Language :: Python :: 3.8',
-                'Programming Language :: Python :: 3.9',
-                'Programming Language :: Python :: 3.10',
-                'Programming Language :: Python :: 3.11',
-                'Programming Language :: Python :: 3.12',
-                'Programming Language :: Python :: 3.13',
-            ],
-            keywords='soroush splus nsplusthon telegram api chat client library messaging mtproto',
-            packages=find_packages(exclude=[
-                'nsplusthon_*', 'tests*'
-            ]),
-            install_requires=['pyaes', 'rsa', 'aiohttp'],
-            extras_require={
-                'cryptg': ['cryptg']
-            }
-        )
+    run([sys.executable, "-m", "build"], check=False)
+    run([sys.executable, "-m", "twine", "upload", "dist/*"], check=False)
+    for x in ("build", "dist", "NSplusthon.egg-info"):
+        shutil.rmtree(x, ignore_errors=True)
 
 
-if __name__ == '__main__':
+_CLI = {"gen", "clean", "pypi"}
+
+if __name__ == "__main__" and len(sys.argv) >= 2 and sys.argv[1] in _CLI:
     with TempWorkDir():
-        main(sys.argv)
+        if sys.argv[1] in ("gen", "clean"):
+            generate(sys.argv[2:], sys.argv[1])
+        else:
+            _upload_pypi()
+else:
+    setup(cmdclass={"build_py": build_py})

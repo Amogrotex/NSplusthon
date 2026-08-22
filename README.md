@@ -57,7 +57,7 @@
 
 ---
 
-کتابخانه NSplusthon یک کتابخانه مدرن و قدرتمند برای **Python 3** است که بر پایه
+کتابخانه NSplusthon یک کتابخانه مدرن و قدرتمند برای **Python 3.9+** است که بر پایه
 **asyncio** توسعه یافته و امکان تعامل مستقیم با **API پیام‌رسان سروش پلاس**
 را به‌عنوان **کاربر** یا **ربات** فراهم می‌کند.
 
@@ -82,6 +82,7 @@
 - بدون نیاز به API ID و API Hash
 - API مشابه Telethon برای مهاجرت آسان
 - مسیر OpenSSL سریع‌تر از SPlusthon / spluspy (AES-IGE)
+- پکیج Typed (`py.typed`) برای Pyright / Pylance / mypy
 
 ## عملکرد
 
@@ -102,10 +103,18 @@ NSplusthon روی این مسیر حدود **۱۸ برابر** SPlusthon است
 
 ## نصب
 
+نیاز به **Python 3.9 یا بالاتر**.
+
 از PyPI:
 
 ```bash
 pip install nsplusthon
+```
+
+سریع‌ترین نصب (cryptg + پروکسی + رسانه):
+
+```bash
+pip install "nsplusthon[fast]"
 ```
 
 یا آخرین نسخه توسعه:

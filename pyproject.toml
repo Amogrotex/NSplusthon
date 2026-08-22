@@ -1,26 +1,112 @@
-# https://snarky.ca/what-the-heck-is-pyproject-toml/
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
-# Need to use legacy format for the time being
-# https://tox.readthedocs.io/en/3.20.0/example/basic.html#pyproject-toml-tox-legacy-ini
+[project]
+name = "NSplusthon"
+dynamic = ["version"]
+description = "Asynchronous Python library for the Soroush Plus API"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {text = "GPL-3.0-only"}
+requires-python = ">=3.9"
+authors = [{name = "AmoGrotex"}]
+maintainers = [{name = "AmoGrotex"}]
+keywords = [
+    "soroush",
+    "splus",
+    "nsplusthon",
+    "mtproto",
+    "asyncio",
+    "chat",
+    "client",
+    "messaging",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pyaes",
+    "rsa",
+    "aiohttp",
+]
+
+[project.optional-dependencies]
+cryptg = ["cryptg"]
+socks = ["python-socks[asyncio]"]
+fast = [
+    "cryptg",
+    "python-socks[asyncio]",
+    "hachoir",
+    "Pillow",
+    "isal",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+]
+
+[project.urls]
+Homepage = "https://github.com/Amogrotex/NSplusthon"
+Documentation = "https://Amogrotex.github.io/NSplusthon/"
+Repository = "https://github.com/Amogrotex/NSplusthon"
+Issues = "https://github.com/Amogrotex/NSplusthon/issues"
+PyPI = "https://pypi.org/project/nsplusthon/"
+
+[tool.setuptools]
+include-package-data = true
+license-files = ["LICENSE"]
+
+[tool.setuptools.dynamic]
+version = {attr = "nsplusthon.version.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nsplusthon*"]
+exclude = ["nsplusthon_examples*", "nsplusthon_generator*", "tests*"]
+
+[tool.setuptools.package-data]
+nsplusthon = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.pyright]
+include = ["nsplusthon"]
+exclude = [
+    "nsplusthon/tl",
+    "nsplusthon/errors/rpcerrorlist.py",
+    "**/__pycache__",
+]
+pythonVersion = "3.9"
+typeCheckingMode = "basic"
+reportMissingTypeStubs = false
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py35,py36,py37,py38
+envlist = py39,py310,py311,py312,py313
 
-# run with tox -e py
 [testenv]
 deps =
     -rrequirements.txt
     -roptional-requirements.txt
     -rdev-requirements.txt
 commands =
-    # NOTE: you can run any command line tool here - not just tests
     pytest {posargs}
 
-# run with tox -e flake
 [testenv:flake]
 deps =
     -rrequirements.txt
@@ -28,9 +114,6 @@ deps =
     -rdev-requirements.txt
     flake8
 commands =
-    # stop the build if there are Python syntax errors or undefined names
     flake8 nsplusthon/ nsplusthon_generator/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
     flake8 nsplusthon/ nsplusthon_generator/ tests/ --count --exit-zero --exclude nsplusthon/tl/,nsplusthon/errors/rpcerrorlist.py --max-complexity=10 --max-line-length=127 --statistics
-
 """
