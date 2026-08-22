@@ -1,13 +1,36 @@
 ---
 hide:
   - navigation
+  - toc
 ---
 
-<div dir="ltr" lang="en">
+<div class="ns-hero" markdown>
+
+<img src="logo.png" alt="NSplusthon">
 
 # NSplusthon
 
-**NSplusthon** is an asyncio Python library for the **Soroush Plus** (سروش پلاس / **SPlus**) messenger API. Write **userbots** and **bots** with a Telethon-style client. No API ID or API hash required.
+کلاینت async پایتون برای سروش پلاس. حساب کاربری و ربات. بدون API ID.
+
+Async Python client for Soroush Plus. Users and bots. No API id or hash.
+
+<div class="ns-actions" markdown>
+
+[شروع سریع](quick-start.md){ .ns-btn }
+[نصب](installation.md){ .ns-btn .ghost }
+[English](en/index.md){ .ns-btn .ghost }
+[GitHub](https://github.com/Amogrotex/NSplusthon){ .ns-btn .ghost }
+
+</div>
+
+<div class="ns-meta">
+<span class="ns-chip">Python 3.9+</span>
+<span class="ns-chip">asyncio</span>
+<span class="ns-chip">MTProto</span>
+<span class="ns-chip">GPL-3.0</span>
+</div>
+
+</div>
 
 ```bash
 pip install nsplusthon
@@ -21,38 +44,16 @@ client = SoroushClient(StringSession())
 
 @client.on(events.NewMessage)
 async def handler(event):
-    await event.reply("سلام 👋")
+    await event.reply("سلام")
 
 client.start()
 client.run_until_disconnected()
 ```
 
-[English overview](en/index.md) · [Install](installation.md)
+!!! note "ورود ربات"
+    کلاینت اصلی `SoroushClient` است. برای ربات از `start(bot_token=...)` استفاده کنید. اسکریپت را `nsplusthon.py` نام نگذارید.
 
-</div>
-
----
-
-# مستندات NSplusthon
-
-**NSplusthon** یک کتابخانه پایتون مبتنی بر **asyncio** برای تعامل با API پیام‌رسان **سروش پلاس** است. می‌توانید هم با **حساب کاربری** و هم با **ربات** کار کنید.
-
-!!! note "یادداشت"
-    این مستندات هم **UserBot** و هم **ربات** را پوشش می‌دهد. کلاینت اصلی `SoroushClient` است. برای ورود ربات از `start(bot_token=...)` استفاده کنید.
-
----
-
-## چرا NSplusthon؟
-
-- **سادگی**: API شبیه Telethon برای سروش‌پلاس
-- **کارایی**: مسیر AES-IGE روی libssl حدود ۱۰۰ MiB/s؛ ایمپورت lazy حدود ۱۵ms
-- **امکانات**: ارسال پیام و فایل، رویدادها، Command Router، rate-limit، session رمزنگاری‌شده
-- **بدون API ID / Hash**: credentials پیش‌فرض داخل کتابخانه است
-- **امنیت**: `StringSession` قابل رمزنگاری با passphrase
-
----
-
-## بخش‌های اصلی مستندات
+## بخش‌ها
 
 <div class="grid cards" markdown>
 
@@ -60,100 +61,70 @@ client.run_until_disconnected()
 
     ---
 
-    راهنمای سریع برای شروع کار با NSplusthon در کمتر از ۵ دقیقه.
+    اولین کلاینت در چند دقیقه.
 
-    [:octicons-arrow-right-24: شروع کنید](quick-start.md)
+    [:octicons-arrow-right-24: شروع](quick-start.md)
 
--   :material-cog:{ .lg .middle } __نصب و راه‌اندازی__
-
-    ---
-
-    راهنمای نصب کتابخانه و وابستگی‌های اختیاری.
-
-    [:octicons-arrow-right-24: نصب کنید](installation.md)
-
--   :material-translate:{ .lg .middle } __English overview__
+-   :material-download:{ .lg .middle } __نصب__
 
     ---
 
-    What NSplusthon is and a first bot.
+    PyPI، extras و عیب‌یابی.
 
-    [:octicons-arrow-right-24: Read in English](en/index.md)
+    [:octicons-arrow-right-24: نصب](installation.md)
 
--   :material-compare:{ .lg .middle } __مقایسه کتابخانه‌ها__
-
-    ---
-
-    NSplusthon در برابر کلاینت‌های دیگر.
-
-    [:octicons-arrow-right-24: مقایسه](compare.md)
-
--   :material-book-open-variant:{ .lg .middle } __مفاهیم پایه__
+-   :material-translate:{ .lg .middle } __English__
 
     ---
 
-    Entity، Session، رویدادها و Command Router.
+    Short overview and first bot.
 
-    [:octicons-arrow-right-24: یاد بگیرید](concepts/index.md)
+    [:octicons-arrow-right-24: Open](en/index.md)
+
+-   :material-book-open-variant:{ .lg .middle } __مفاهیم__
+
+    ---
+
+    Entity، Session، رویدادها، Router.
+
+    [:octicons-arrow-right-24: مفاهیم](concepts/index.md)
 
 -   :material-code-braces:{ .lg .middle } __مثال‌ها__
 
     ---
 
-    مثال‌های عملی و کاربردی برای یادگیری بهتر.
+    پیام، فایل، چت و کانال.
 
-    [:octicons-arrow-right-24: ببینید](examples/index.md)
+    [:octicons-arrow-right-24: مثال‌ها](examples/index.md)
 
 -   :material-api:{ .lg .middle } __مرجع API__
 
     ---
 
-    متدهای اصلی `SoroushClient` و رویدادها.
+    متدهای `SoroushClient` و رویدادها.
 
-    [:octicons-arrow-right-24: بررسی کنید](api-reference.md)
+    [:octicons-arrow-right-24: API](api-reference.md)
 
 -   :material-frequently-asked-questions:{ .lg .middle } __سوالات متداول__
 
     ---
 
-    پاسخ به سوالات رایج کاربران.
+    نصب، session، FloodWait.
 
-    [:octicons-arrow-right-24: بخوانید](faq.md)
+    [:octicons-arrow-right-24: FAQ](faq.md)
+
+-   :material-compare:{ .lg .middle } __مقایسه__
+
+    ---
+
+    NSplusthon و کلاینت‌های دیگر.
+
+    [:octicons-arrow-right-24: مقایسه](compare.md)
 
 </div>
 
----
+## لینک‌ها
 
-## نمای کلی کتابخانه
-
-```python
-from nsplusthon import SoroushClient, events
-from nsplusthon.sessions import StringSession
-
-client = SoroushClient(StringSession())
-
-@client.on(events.NewMessage(pattern="(?i)سلام"))
-async def handler(event):
-    await event.reply("سلام! خوش آمدید.")
-
-client.start()
-client.run_until_disconnected()
-```
-
----
-
-## پیش‌نیازها
-
-- پایتون **3.9** یا بالاتر
-- pip (آخرین نسخه)
-- آشنایی مقدماتی با asyncio در پایتون
-
----
-
-## لینک‌های مفید
-
-- [GitHub](https://github.com/Amogrotex/NSplusthon)
-- [PyPI](https://pypi.org/project/nsplusthon/)
-- [سروش‌پلاس](https://web.splus.ir)
-- [مرجع API همین سایت](api-reference.md)
-- [English](en/index.md)
+[GitHub](https://github.com/Amogrotex/NSplusthon) ·
+[PyPI](https://pypi.org/project/nsplusthon/) ·
+[سروش پلاس](https://web.splus.ir)

@@ -1,11 +1,191 @@
-/*
- * NSplusthon docs — extra styles
- * Monochrome (black & white) accent on top of Material's palette.
- * Keep this file lean: everything else is handled by the theme
- * (direction: rtl, font: Vazirmatn, palette: black/white).
- */
+/* NSplusthon — full black / white theme */
 
-/* English sections embedded in RTL pages */
+:root {
+    --ns-fg: #111111;
+    --ns-bg: #ffffff;
+    --ns-muted: #5c5c5c;
+    --ns-line: #e6e6e6;
+    --ns-soft: #f4f4f4;
+    --ns-code: #f2f2f2;
+    --ns-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="default"] {
+    --md-default-bg-color: #ffffff;
+    --md-default-fg-color: #111111;
+    --md-default-fg-color--light: #444444;
+    --md-default-fg-color--lighter: #888888;
+    --md-primary-fg-color: #111111;
+    --md-primary-bg-color: #ffffff;
+    --md-accent-fg-color: #111111;
+    --md-code-bg-color: #f2f2f2;
+    --md-code-fg-color: #111111;
+    --md-footer-bg-color: #111111;
+    --md-footer-fg-color: #ffffff;
+    --md-typeset-a-color: #111111;
+    --ns-fg: #111111;
+    --ns-bg: #ffffff;
+    --ns-muted: #5c5c5c;
+    --ns-line: #e6e6e6;
+    --ns-soft: #f4f4f4;
+    --ns-code: #f2f2f2;
+    --ns-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="slate"] {
+    --md-default-bg-color: #0b0b0b;
+    --md-default-fg-color: #f4f4f4;
+    --md-default-fg-color--light: #c8c8c8;
+    --md-default-fg-color--lighter: #8a8a8a;
+    --md-primary-fg-color: #0b0b0b;
+    --md-primary-bg-color: #f4f4f4;
+    --md-accent-fg-color: #ffffff;
+    --md-code-bg-color: #161616;
+    --md-code-fg-color: #f4f4f4;
+    --md-footer-bg-color: #000000;
+    --md-footer-fg-color: #f4f4f4;
+    --md-typeset-a-color: #ffffff;
+    --ns-fg: #f4f4f4;
+    --ns-bg: #0b0b0b;
+    --ns-muted: #a3a3a3;
+    --ns-line: #2a2a2a;
+    --ns-soft: #161616;
+    --ns-code: #161616;
+    --ns-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: "Vazirmatn", "Tahoma", "Arial", sans-serif;
+    background: var(--ns-bg);
+    color: var(--ns-fg);
+}
+
+.md-header {
+    background: var(--ns-bg);
+    color: var(--ns-fg);
+    border-bottom: 1px solid var(--ns-line);
+    box-shadow: none;
+}
+
+.md-header__title,
+.md-header__button,
+.md-search__icon,
+.md-header .md-tabs__link {
+    color: var(--ns-fg);
+}
+
+.md-header__button:hover {
+    opacity: 0.7;
+}
+
+.md-tabs {
+    background: var(--ns-bg);
+    color: var(--ns-fg);
+    border-bottom: 1px solid var(--ns-line);
+}
+
+.md-tabs__link {
+    color: var(--ns-muted);
+    opacity: 1;
+    font-weight: 600;
+}
+
+.md-tabs__link--active,
+.md-tabs__link:hover {
+    color: var(--ns-fg);
+}
+
+.md-search__form {
+    background: var(--ns-soft);
+}
+
+.md-search__input {
+    color: var(--ns-fg);
+}
+
+.md-main {
+    background: var(--ns-bg);
+}
+
+.md-content {
+    max-width: none;
+}
+
+.md-grid {
+    max-width: 1180px;
+}
+
+.md-typeset {
+    font-size: 0.92rem;
+    line-height: 1.85;
+}
+
+.md-typeset h1 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ns-fg);
+}
+
+.md-typeset h2,
+.md-typeset h3 {
+    font-weight: 700;
+    color: var(--ns-fg);
+    border-bottom: 1px solid var(--ns-line);
+    padding-bottom: 0.35rem;
+}
+
+.md-typeset a {
+    color: var(--ns-fg);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.md-typeset a:hover {
+    opacity: 0.7;
+}
+
+.md-typeset code {
+    direction: ltr;
+    unicode-bidi: isolate;
+    background: var(--ns-code);
+    border: 1px solid var(--ns-line);
+    border-radius: 6px;
+    padding: 0.08em 0.38em;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.md-typeset pre {
+    direction: ltr;
+    text-align: left;
+}
+
+.md-typeset pre > code {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.md-typeset .highlight,
+.md-typeset pre {
+    border: 1px solid var(--ns-line);
+    border-radius: 14px;
+    background: var(--ns-code);
+    box-shadow: none;
+}
+
+.md-typeset kbd {
+    direction: ltr;
+}
+
+.mermaid {
+    direction: ltr;
+    text-align: center;
+}
+
 .md-typeset [dir="ltr"] {
     direction: ltr;
     text-align: left;
@@ -20,58 +200,145 @@
     text-align: left;
 }
 
-/* Code is always LTR, even in an RTL page */
-.md-typeset code {
-    direction: ltr;
-    unicode-bidi: isolate;
-}
-
-.md-typeset pre {
-    direction: ltr;
-    text-align: left;
-}
-
-.md-typeset kbd {
-    direction: ltr;
-}
-
-.mermaid {
-    direction: ltr;
-    text-align: center;
-}
-
-/* Tables: keep Persian text right-aligned */
 .md-typeset table:not([class]) {
     direction: rtl;
+    border: 1px solid var(--ns-line);
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .md-typeset table:not([class]) th,
 .md-typeset table:not([class]) td {
     text-align: right;
+    border-color: var(--ns-line);
 }
 
-/* Font fallbacks in case the webfont fails to load */
-body {
-    font-family: 'Vazirmatn', 'Tahoma', 'Arial', sans-serif;
+.md-typeset table:not([class]) th {
+    background: var(--ns-soft);
 }
 
-/* Monochrome admonition borders (match the black/white theme) */
 .md-typeset .admonition {
-    border-right-color: var(--md-default-fg-color);
+    border: 1px solid var(--ns-line);
+    border-right: 4px solid var(--ns-fg);
+    border-radius: 12px;
+    background: var(--ns-soft);
+    box-shadow: none;
 }
 
-/* Admonition icon: give it room on the right (RTL) */
 .md-typeset .admonition-title::before {
     margin-left: 0.5rem;
     margin-right: 0;
 }
 
-/* Blockquote accent */
 .md-typeset blockquote {
-    border-right: 4px solid var(--md-default-fg-color);
+    border-right: 4px solid var(--ns-fg);
+    color: var(--ns-muted);
 }
 
-/* Thin, subtle scrollbar */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid.cards > ol > li,
+.md-typeset .grid.cards > * {
+    border: 1px solid var(--ns-line);
+    border-radius: 16px;
+    background: var(--ns-bg);
+    box-shadow: none;
+    padding: 1rem 1.1rem;
+}
+
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > * :hover {
+    border-color: var(--ns-fg);
+}
+
+/* Hero */
+
+.ns-hero {
+    border: 1px solid var(--ns-line);
+    border-radius: 28px;
+    padding: 2.4rem 2rem 2rem;
+    margin: 0.4rem 0 2rem;
+    background:
+        linear-gradient(180deg, var(--ns-soft) 0%, var(--ns-bg) 70%);
+    box-shadow: var(--ns-shadow);
+    text-align: center;
+}
+
+.ns-hero img {
+    width: 140px;
+    height: auto;
+    margin-bottom: 0.8rem;
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.18));
+}
+
+[data-md-color-scheme="slate"] .ns-hero img {
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6)) contrast(1.05);
+}
+
+.ns-hero h1 {
+    margin: 0.2rem 0 0.4rem;
+    font-size: 2.4rem;
+    border: 0;
+}
+
+.ns-hero p {
+    color: var(--ns-muted);
+    max-width: 42rem;
+    margin: 0 auto 1.2rem;
+}
+
+.ns-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    justify-content: center;
+    margin: 1.1rem 0 0.2rem;
+}
+
+.ns-btn {
+    display: inline-block;
+    padding: 0.62rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--ns-fg);
+    text-decoration: none !important;
+    font-weight: 700;
+    color: var(--ns-bg) !important;
+    background: var(--ns-fg);
+}
+
+.ns-btn.ghost {
+    color: var(--ns-fg) !important;
+    background: transparent;
+}
+
+.ns-btn:hover {
+    opacity: 0.82;
+}
+
+.ns-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1.1rem;
+}
+
+.ns-chip {
+    border: 1px solid var(--ns-line);
+    background: var(--ns-bg);
+    border-radius: 999px;
+    padding: 0.22rem 0.7rem;
+    font-size: 0.78rem;
+    color: var(--ns-muted);
+}
+
+.md-footer {
+    border-top: 1px solid var(--ns-line);
+}
+
+.md-footer-meta {
+    background: var(--md-footer-bg-color);
+}
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -82,23 +349,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.28);
     border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.45);
-}
-
 [data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.28);
 }
 
-[data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.45);
-}
+@media (max-width: 720px) {
+    .ns-hero {
+        padding: 1.4rem 1rem 1.2rem;
+        border-radius: 18px;
+    }
 
-/* Slightly wider content column for code-heavy pages */
-.md-grid {
-    max-width: 1200px;
+    .ns-hero h1 {
+        font-size: 1.7rem;
+    }
 }
