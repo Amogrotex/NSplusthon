@@ -73,3 +73,5 @@ readthedocs/
 .readthedocs.yaml
 tests/readthedocs/
 .mimocode/
+# mkdocs local build output (the site committed in docs/ is built via scripts/build_docs.sh)
+site/
