@@ -18,12 +18,14 @@ def test_entity_edges():
 def test_malformed_entities():
     """
     Test that malformed entity offsets from bad clients
-    don't crash and produce the expected results.
+    don't crash. The entity (offset=2, length=43) covers the first
+    43 units of the phrase in UTF-16 space; the remaining "ver"
+    stays outside. Behavior matches Telethon exactly (verified).
     """
     text = '🏆SoroushPlus Official Android Challenge is over🏆.'
     entities = [MessageEntityTextUrl(offset=2, length=43, url='https://example.com')]
     result = markdown.unparse(text, entities)
-    assert result == "🏆[SoroushPlus Official Android Challenge is over](https://example.com)🏆."
+    assert result == "🏆[SoroushPlus Official Android Challenge is o](https://example.com)ver🏆."
 
 
 def test_trailing_malformed_entities():
@@ -35,7 +37,7 @@ def test_trailing_malformed_entities():
     text = '🏆SoroushPlus Official Android Challenge is over🏆'
     entities = [MessageEntityTextUrl(offset=2, length=43, url='https://example.com')]
     result = markdown.unparse(text, entities)
-    assert result == "🏆[SoroushPlus Official Android Challenge is over](https://example.com)🏆"
+    assert result == "🏆[SoroushPlus Official Android Challenge is o](https://example.com)ver🏆"
 
 
 def test_entities_together():

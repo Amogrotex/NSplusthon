@@ -56,7 +56,17 @@ class RateLimiter:
         self.max_calls = int(max_calls)
         self.period = float(period)
         self._windows: 'defaultdict[Hashable, deque]' = defaultdict(deque)
-        self._lock = asyncio.Lock()
+        # Created lazily: on Python 3.9 asyncio.Lock() binds to the *current*
+        # event loop at construction time. Creating it eagerly breaks the
+        # standard pattern of building a limiter outside a running loop
+        # (e.g. `Router().use_rate_limit(...)` at module level), especially
+        # after a previous asyncio.run() has cleared the loop policy.
+        self._lock: Optional[asyncio.Lock] = None
+
+    def _get_lock(self) -> asyncio.Lock:
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     def _prune(self, window: deque, now: float) -> None:
         cutoff = now - self.period
@@ -84,7 +94,7 @@ class RateLimiter:
         granted = False
         wait = 0.05
         while not granted:
-            async with self._lock:
+            async with self._get_lock():
                 now = time.monotonic()
                 window = self._windows[key]
                 self._prune(window, now)

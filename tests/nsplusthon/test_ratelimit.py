@@ -60,3 +60,27 @@ def test_window_slides():
     t0 = time.monotonic()
     asyncio.run(run())
     assert time.monotonic() - t0 < 0.5  # second slot did not wait long
+
+
+def test_construct_after_loop_cleared():
+    """
+    Regression (Python 3.9): asyncio.run() clears the main thread's event
+    loop policy when it finishes. Constructing a RateLimiter afterwards, at
+    top level (the standard `Router().use_rate_limit(...)` pattern), used to
+    raise RuntimeError because asyncio.Lock() binds to the *current* loop at
+    construction time on 3.9. The lock is now created lazily on first use.
+    """
+    async def _noop():
+        pass
+
+    # Clears the current-loop binding on Python 3.9
+    asyncio.run(_noop())
+
+    # Must not raise, even though no event loop is currently running
+    limiter = RateLimiter(max_calls=1, period=60)
+
+    async def run():
+        async with limiter.slot('a'):
+            pass
+
+    asyncio.run(run())

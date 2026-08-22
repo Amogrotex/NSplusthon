@@ -324,8 +324,12 @@ class ConnectionWebSocket(ObfuscatedConnection):
         self._init_conn()
         await self._writer.drain()
 
-        # Start periodic reconnect loop
-        self._reconnect_task = asyncio.ensure_future(self._reconnect_loop())
+        # Start the periodic reset loop, unless one is already running
+        # (this is the case when _connect() is invoked from within the
+        # reset loop itself, in which case spawning a second one would
+        # leak a task per reset cycle).
+        if self._reconnect_task is None or self._reconnect_task.done():
+            self._reconnect_task = asyncio.ensure_future(self._reconnect_loop())
 
     async def _reconnect_loop(self):
         """Periodically reset the WebSocket connection every N seconds."""
@@ -340,12 +344,10 @@ class ConnectionWebSocket(ObfuscatedConnection):
                 except Exception as e:
                     _log.debug('Error during reconnect disconnect: %s', e)
                 try:
-                    # Reconnect without starting the reconnect loop again
-                    await self._connect()
-                    self._connected = True
-                    loop = helpers.get_running_loop()
-                    self._send_task = loop.create_task(self._send_loop())
-                    self._recv_task = loop.create_task(self._recv_loop())
+                    # Reconnect (base class re-creates the send/recv loops).
+                    # _connect() won't spawn a second reset task because
+                    # this one is still running.
+                    await self.connect()
                 except Exception as e:
                     _log.warning('WebSocket reconnect failed: %s', e)
                     break
@@ -358,12 +360,20 @@ class ConnectionWebSocket(ObfuscatedConnection):
 
         self._connected = False
 
-        await helpers._cancel(
-            self._log,
+        # Never cancel the reset task if we are currently running inside it
+        # (the periodic reset calls disconnect() from _reconnect_loop).
+        # Self-cancellation would raise CancelledError in this very
+        # coroutine, killing the reset mid-flight and skipping the
+        # writer/session cleanup below (socket + aiohttp session leak).
+        cancel_kwargs = dict(
             send_task=self._send_task,
             recv_task=self._recv_task,
-            reconnect_task=self._reconnect_task
         )
+        if (self._reconnect_task is not None
+                and asyncio.current_task() is not self._reconnect_task):
+            cancel_kwargs['reconnect_task'] = self._reconnect_task
+
+        await helpers._cancel(self._log, **cancel_kwargs)
 
         if hasattr(self, '_writer') and self._writer:
             self._writer.close()

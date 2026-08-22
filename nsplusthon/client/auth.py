@@ -54,9 +54,9 @@ class AuthMethods:
                 The argument may be a coroutine.
 
             bot_token (`str`):
-                Bot Token obtained by `@BotFather <https://t.me/BotFather>`_
-                to log in as a bot. Cannot be specified with ``phone`` (only
-                one of either allowed).
+                Bot Token obtained from @BotFather inside the Soroush Plus
+                app to log in as a bot. Cannot be specified with ``phone``
+                (only one of either allowed).
 
             force_sms (`bool`, optional):
                 Whether to force sending the code request as SMS.
