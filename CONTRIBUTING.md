@@ -1,6 +1,6 @@
 # Contributing to NSplusthon
 
-Thanks for helping. This is a small, fast-moving fork of SPlusthon — short, focused PRs are easiest to review.
+Thanks for helping. Short, focused PRs are easiest to review.
 
 ## Setup
 
@@ -36,7 +36,7 @@ These are more useful than extra badges:
 
 - Real usage examples in `nsplusthon_examples/`
 - Bug reports with versions (`pip show nsplusthon`)
-- A short post that links the **exact** name: NSplusthon, Soroush Plus, سروش پلاس, SPlusthon
+- A short post that links the **exact** name: NSplusthon, Soroush Plus, سروش پلاس
 - GitHub topics on the repo: `nsplusthon`, `soroush-plus`, `splus`, `python`, `asyncio`, `mtproto`, `telethon`, `userbot`
 - Repo description: `Async Python library for the Soroush Plus (سروش پلاس) API`
 

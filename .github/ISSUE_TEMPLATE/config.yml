@@ -2,7 +2,7 @@ blank_issues_enabled: true
 contact_links:
   - name: Documentation
     url: https://amogrotex.github.io/NSplusthon/
-    about: Persian docs, English overview, comparison, and SPlusthon migration
+    about: Persian docs and English overview
   - name: PyPI package
     url: https://pypi.org/project/nsplusthon/
     about: Install with pip install nsplusthon

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "NSplusthon"
 dynamic = ["version"]
-description = "Async Python client for Soroush Plus (سروش پلاس / SPlus) — Telethon-style SoroushClient, fork of SPlusthon"
+description = "Async Python client for Soroush Plus (سروش پلاس / SPlus)"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = {text = "GPL-3.0-only"}
 requires-python = ">=3.9"
@@ -16,7 +16,6 @@ keywords = [
     "soroush-plus",
     "soroushplus",
     "splus",
-    "splusthon",
     "nsplusthon",
     "spluspy",
     "mtproto",

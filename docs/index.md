@@ -27,7 +27,7 @@ client.start()
 client.run_until_disconnected()
 ```
 
-[English overview](en/index.md) · [Compare vs SPlusthon](compare.md) · [Migrate](migration.md) · [Install](installation.md)
+[English overview](en/index.md) · [Install](installation.md)
 
 </div>
 
@@ -45,7 +45,7 @@ client.run_until_disconnected()
 ## چرا NSplusthon؟
 
 - **سادگی**: API شبیه Telethon برای سروش‌پلاس
-- **کارایی**: AES-IGE حدود ۱۸ برابر سریع‌تر از SPlusthon؛ ایمپورت lazy حدود ۱۵ms
+- **کارایی**: مسیر AES-IGE روی libssl حدود ۱۰۰ MiB/s؛ ایمپورت lazy حدود ۱۵ms
 - **امکانات**: ارسال پیام و فایل، رویدادها، Command Router، rate-limit، session رمزنگاری‌شده
 - **بدون API ID / Hash**: credentials پیش‌فرض داخل کتابخانه است
 - **امنیت**: `StringSession` قابل رمزنگاری با passphrase
@@ -76,7 +76,7 @@ client.run_until_disconnected()
 
     ---
 
-    What NSplusthon is, how it compares to SPlusthon, and a first bot.
+    What NSplusthon is and a first bot.
 
     [:octicons-arrow-right-24: Read in English](en/index.md)
 
@@ -84,7 +84,7 @@ client.run_until_disconnected()
 
     ---
 
-    NSplusthon در برابر SPlusthon، spluspy و Telethon.
+    NSplusthon در برابر کلاینت‌های دیگر.
 
     [:octicons-arrow-right-24: مقایسه](compare.md)
 
@@ -156,4 +156,4 @@ client.run_until_disconnected()
 - [PyPI](https://pypi.org/project/nsplusthon/)
 - [سروش‌پلاس](https://web.splus.ir)
 - [مرجع API همین سایت](api-reference.md)
-- [مهاجرت از SPlusthon](migration.md)
+- [English](en/index.md)

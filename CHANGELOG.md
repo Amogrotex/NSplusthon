@@ -1,28 +1,16 @@
 # Changelog
 
-## 1.3.5
-
-Docs and packaging release so PyPI/search actually describe the project.
-
-- Bilingual README (this is the PyPI long description)
-- English overview, SPlusthon comparison and migration pages
-- Keywords: soroush-plus, splusthon, telethon, userbot
-- Python 3.9 called out everywhere; dead `tl.nsplusthon.dev` / `v1.zip` links removed
-
 ## Unreleased
 
-### Docs
+- README / docs no longer describe another project as upstream.
 
-- Bilingual README and homepage so “NSplusthon”, “Soroush Plus”, and “SPlusthon” are actually searchable.
-- English overview, comparison, and SPlusthon migration pages.
-- Require Python 3.9 everywhere (removed leftover 3.7).
-- Replace dead `tl.nsplusthon.dev` and `archive/v1.zip` links.
-- Document `aiohttp` as a required dependency, not an extra.
-- Stop pointing issue templates at a missing Telegram channel.
+## 1.3.5
 
-### Packaging
+Docs and packaging release.
 
-- Richer PyPI description and keywords (`soroush-plus`, `splusthon`, `telethon`, `userbot`).
+- Bilingual README (PyPI long description)
+- English overview
+- Python 3.9 called out everywhere; dead `tl.nsplusthon.dev` / `v1.zip` links removed
 
 ## 1.3.0
 
@@ -31,4 +19,4 @@ Docs and packaging release so PyPI/search actually describe the project.
 
 ## 1.1.4
 
-- Initial import of the SPlusthon codebase as `nsplusthon` (GPL-3.0).
+- First public `nsplusthon` release (GPL-3.0).

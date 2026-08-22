@@ -343,25 +343,6 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../migration/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  مهاجرت از SPlusthon
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
     
     
       <li class="md-tabs__item">
@@ -636,33 +617,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../migration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    مهاجرت از SPlusthon
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
     
     
     
@@ -679,10 +633,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -700,8 +654,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1020,10 +974,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1041,8 +995,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1309,21 +1263,18 @@
 
 # NSplusthon (English)
 
-**NSplusthon** is an asynchronous Python library for the **Soroush Plus** messenger API (سروش پلاس, also known as **SPlus**).
-
-It is the Telethon equivalent for Soroush Plus: one `SoroushClient` that can log in as a **user** or a **bot**, send messages and files, download media, and react to events.
+Async Python client for **Soroush Plus** (سروش پلاس / SPlus).
 
 - Package: [`nsplusthon` on PyPI](https://pypi.org/project/nsplusthon/)
 - Source: [github.com/Amogrotex/NSplusthon](https://github.com/Amogrotex/NSplusthon)
 - Messenger: [web.splus.ir](https://web.splus.ir)
-- Related libraries: [SPlusthon](https://github.com/shayanheidari01/SPlusthon) (upstream fork), [Telethon](https://github.com/LonamiWebs/Telethon) (Telegram)
 
 ## Install
 
 Python **3.9+**.
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>nsplusthon
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;nsplusthon[fast]&quot;</span><span class="w">   </span><span class="c1"># cryptg + SOCKS + media extras</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;nsplusthon[fast]&quot;</span>
 </span></code></pre></div>
 
 Do not name your file `nsplusthon.py`.
@@ -1348,25 +1299,9 @@ No `api_id` / `api_hash`. For a bot token:
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">bot_token</span><span class="o">=</span><span class="s2">&quot;12345:abcdef&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
-## When to use it
+More: [Persian docs home](../index.md)
 
-| You want… | Use |
-| --- | --- |
-| Soroush Plus userbot or bot in Python | **NSplusthon** |
-| Older SPlus client you already depend on | [SPlusthon](migration.md) — then migrate |
-| Telegram | Telethon / Pyrogram, not this package |
-
-More: [library comparison](../compare.md) · [SPlusthon migration](../migration.md) · [Persian docs home](../index.md)
-
-## Features in short
-
-- MTProto + Soroush TL schema (layer 182)
-- WebSocket transport and DC routing
-- Sync wrapper (`nsplusthon.sync`)
-- Command router, rate limiter, encrypted `StringSession`
-- Typed (`py.typed`)
-
-This library is third-party and not affiliated with Soroush Plus. Follow their terms.
+This library is third-party and not affiliated with Soroush Plus.
 
 </div>
 

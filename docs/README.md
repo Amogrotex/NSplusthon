@@ -8,8 +8,7 @@ Persian MkDocs site for GitHub Pages, plus a short English overview for search.
 docs/
 ├── index.md                 # Home (EN blurb + فارسی)
 ├── en/index.md              # English overview
-├── compare.md               # vs SPlusthon / spluspy / Telethon
-├── migration.md             # SPlusthon → NSplusthon
+├── compare.md
 ├── installation.md
 ├── quick-start.md
 ├── api-reference.md

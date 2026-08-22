@@ -16,7 +16,7 @@
         <link rel="prev" href="../installation/">
       
       
-        <link rel="next" href="../migration/">
+        <link rel="next" href="../concepts/">
       
       
         
@@ -348,25 +348,6 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../migration/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  مهاجرت از SPlusthon
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
     
     
       <li class="md-tabs__item">
@@ -666,7 +647,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        مقایسه به فارسی
+        مقایسه
       
     </span>
   </a>
@@ -677,33 +658,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../migration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    مهاجرت از SPlusthon
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -730,10 +684,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -751,8 +705,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1071,10 +1025,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1092,8 +1046,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1334,7 +1288,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        مقایسه به فارسی
+        مقایسه
       
     </span>
   </a>
@@ -1377,56 +1331,24 @@
 
 <div dir="ltr" lang="en">
 
-# Compare Soroush Plus Python libraries
+# Other clients
 
-People searching for **Soroush Plus**, **SPlus**, **SPlusthon**, **spluspy**, or a **Telethon for سروش پلاس** usually want one of these:
+NSplusthon is a Python MTProto client for **Soroush Plus**. It is not Telegram.
 
-| Library | Role | Client style |
-| --- | --- | --- |
-| **[NSplusthon](https://github.com/Amogrotex/NSplusthon)** | Maintained fork of SPlusthon | `SoroushClient` (Telethon-like) |
-| **[SPlusthon](https://github.com/shayanheidari01/SPlusthon)** | Original Telethon port | `SoroushClient` |
-| **spluspy** | Alternate SPlus client | different API |
-| **[Telethon](https://github.com/LonamiWebs/Telethon)** | Telegram, not Soroush | `TelegramClient` |
+| If you want… | Use |
+| --- | --- |
+| Soroush Plus, Python, Telethon-style API | **NSplusthon** |
+| Telegram | Telethon / Pyrogram |
 
-## NSplusthon vs SPlusthon
+`spluspy` is another SPlus library with a different API.
 
-NSplusthon started as a rebranded import of SPlusthon and then added:
-
-- ~18× faster AES-IGE on the OpenSSL path
-- lazy `import nsplusthon` (~15 ms vs ~340 ms)
-- command router + sliding-window rate limiter
-- passphrase-encrypted `StringSession`
-- `py.typed` for type checkers
-
-The public client is still `SoroushClient`. Changing `import splusthon` → `import nsplusthon` is the usual migration. See [Migrate from SPlusthon](migration.md).
-
-## NSplusthon vs Telethon
-
-Same programming model (events, sessions, `send_message`, raw TL requests). Different network: **Soroush Plus MTProto**, not Telegram. You cannot point NSplusthon at `my.telegram.org`.
-
-## Benchmarks
-
-AES-IGE via libssl, 256 KiB, Python 3.13, best of 9 runs:
-
-| Library | Time | Throughput |
-| --- | ---: | ---: |
-| NSplusthon | 2.50 ms | 100.1 MiB/s |
-| SPlusthon | 44.86 ms | 5.6 MiB/s |
-| spluspy | 42.47 ms | 5.9 MiB/s |
-
-Repro: [`benchmarks/aes_ige_bench.py`](https://github.com/Amogrotex/NSplusthon/blob/main/benchmarks/aes_ige_bench.py)
+AES-IGE via libssl, 256 KiB, Python 3.13, best of 9: NSplusthon about **100 MiB/s** on the machine in `benchmarks/aes_ige_bench.py`.
 
 </div>
 
 <hr />
-<h2 id="_1">مقایسه به فارسی<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>اگر دنبال کتابخانه پایتون برای <strong>سروش پلاس</strong> هستید:</p>
-<ul>
-<li><strong>NSplusthon</strong> — نسخه نگهداری‌شده و سریع‌تر SPlusthon، با Router و session رمزنگاری‌شده</li>
-<li><strong>SPlusthon</strong> — پروژه بالادستی؛ API تقریباً یکسان است</li>
-<li><strong>Telethon</strong> — فقط تلگرام است، نه سروش</li>
-</ul>
-<p>نصب:</p>
+<h2 id="_1">مقایسه<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>NSplusthon کلاینت پایتون برای <strong>سروش پلاس</strong> است، نه تلگرام.</p>
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>nsplusthon
 </span></code></pre></div>
 

@@ -6,7 +6,7 @@
 
 Python client for [Soroush Plus](https://web.splus.ir) (سروش پلاس). Same general shape as [Telethon](https://github.com/LonamiWebs/Telethon): asyncio, events, `StringSession`. Works as a user or a bot. You don't need an API id/hash.
 
-Fork of [SPlusthon](https://github.com/shayanheidari01/SPlusthon). Import is `nsplusthon`; the client is still `SoroushClient`.
+Import is `nsplusthon`. The client class is `SoroushClient`.
 
 <p dir="rtl">
 کلاینت پایتون برای سروش پلاس. هم حساب کاربری، هم ربات. بدون API ID.
@@ -45,8 +45,6 @@ Bot token:
 ```python
 client.start(bot_token="12345:…")
 ```
-
-Coming from SPlusthon? Change the import. That's most of it. Notes: [migration](https://amogrotex.github.io/NSplusthon/migration/).
 
 ## usage
 
@@ -111,7 +109,7 @@ Hard deps: `aiohttp`, `pyaes`, `rsa`.
 
 ## numbers
 
-AES-IGE through libssl, 256 KiB, no cryptg, best of 9 on a Xeon @ 2.60 GHz / CPython 3.13: about **100 MiB/s** here vs ~6 MiB/s for SPlusthon and spluspy on the same box. `import nsplusthon` is lazy and lands around 15 ms. Scripts are in `benchmarks/`.
+AES-IGE through libssl, 256 KiB, no cryptg, best of 9 on a Xeon @ 2.60 GHz / CPython 3.13: about **100 MiB/s**. `import nsplusthon` is lazy and lands around 15 ms. Scripts are in `benchmarks/`.
 
 ## docs
 
@@ -122,4 +120,4 @@ AES-IGE through libssl, 256 KiB, no cryptg, best of 9 on a Xeon @ 2.60 GHz / CPy
 
 PRs: [CONTRIBUTING.md](CONTRIBUTING.md). License is [GPL-3.0](LICENSE). Not affiliated with Soroush Plus; their [terms](https://web.splus.ir) still apply.
 
-Maintained by [AmoGrotex](https://github.com/Amogrotex). Upstream: SPlusthon (Shayan Heidari) ← Telethon (Lonami).
+Maintained by [AmoGrotex](https://github.com/Amogrotex).
