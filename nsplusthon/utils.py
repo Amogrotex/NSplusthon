@@ -914,13 +914,39 @@ def is_list_like(obj):
 
 
 def parse_phone(phone):
-    """Parses the given phone, or returns `None` if it's invalid."""
+    """
+    Parses the given phone, or returns `None` if it's invalid.
+
+    The number is normalized to the digit-only international format that
+    Soroush Plus expects (no ``+``, no leading zeros):
+
+    - ``+989351234567`` / ``989351234567`` → ``'989351234567'``
+    - ``+9809351234567`` → ``'989351234567'``
+    - ``09351234567`` → ``'989351234567'``
+    - ``00989351234567`` → ``'989351234567'``
+
+    Local numbers (starting with ``0``) are treated as Iranian numbers
+    and get the ``98`` country code prepended.
+    """
     if isinstance(phone, int):
         return str(phone)
-    else:
-        phone = re.sub(r'[+()\s-]', '', str(phone))
-        if phone.isdigit():
-            return phone
+
+    phone = re.sub(r'[+().\s-]', '', str(phone))
+    if not phone.isdigit():
+        return None
+
+    # International prefix without a plus: 0098... -> 98...
+    if phone.startswith('00'):
+        phone = phone[2:]
+
+    # Leading zero after the country code: 980935... -> 98935...
+    if phone.startswith('980') and len(phone) == 13:
+        phone = '98' + phone[3:]
+    # Iranian local number: 0935... / 021... -> 98935... / 9821...
+    elif phone.startswith('0') and 9 <= len(phone) <= 11:
+        phone = '98' + phone[1:]
+
+    return phone
 
 
 def parse_username(username):

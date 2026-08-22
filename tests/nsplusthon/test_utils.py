@@ -56,3 +56,36 @@ def test_private_get_extension():
 
 def test_rle_encode_trailing_zeros():
     assert utils._rle_encode(b'\x12\x00\x00\x00\x00') == b'\x12\x00\x04'
+
+
+@pytest.mark.parametrize('raw, expected', [
+    # International format (the canonical form Soroush expects)
+    ('+989351234567', '989351234567'),
+    ('989351234567', '989351234567'),
+    # Country code + leading zero
+    ('+9809351234567', '989351234567'),
+    ('9809351234567', '989351234567'),
+    # Local format with leading zero
+    ('09351234567', '989351234567'),
+    # Local fixed line
+    ('02188888888', '982188888888'),
+    # International prefix 00 (with or without the extra zero)
+    ('00989351234567', '989351234567'),
+    ('009809351234567', '989351234567'),
+    # Formatting characters are stripped
+    ('+98 0935 123 4567', '989351234567'),
+    ('+98(0)935-123.4567', '989351234567'),
+    ('0935.123.4567', '989351234567'),
+    # Numbers from other countries pass through unchanged
+    ('+14155551234', '14155551234'),
+    ('+447911123456', '447911123456'),
+    # ints
+    (989351234567, '989351234567'),
+])
+def test_parse_phone_normalization(raw, expected):
+    assert utils.parse_phone(raw) == expected
+
+
+@pytest.mark.parametrize('raw', ['abc', '', '+', '989a55'])
+def test_parse_phone_invalid(raw):
+    assert utils.parse_phone(raw) is None
