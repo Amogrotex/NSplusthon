@@ -241,6 +241,40 @@ def test_client_use_router():
     assert router.resolve('start') is not None
 
 
+def test_client_constructible_with_no_event_loop():
+    """
+    Regression (Python 3.9): asyncio.Lock()/Queue()/Event() bind to the
+    *current* event loop at construction time on 3.9. After a preceding
+    asyncio.run() has cleared the loop policy, building a SoroushClient at
+    the top level used to raise RuntimeError. All loop-bound primitives
+    are now created lazily on first use (always inside a running loop).
+    """
+    from nsplusthon import SoroushClient
+    from nsplusthon.sessions import StringSession
+
+    async def _noop():
+        pass
+
+    # Clears the main thread's event loop policy on Python 3.9
+    asyncio.run(_noop())
+
+    # Must not raise, even with no running/current event loop
+    client = SoroushClient(StringSession())
+
+    async def run():
+        # Force the lazy primitives to be created inside a running loop
+        assert client._get_borrow_sender_lock() is not None
+        queue = client._updates_queue
+        assert client._sender._get_connect_lock() is not None
+        assert client._sender._send_queue._get_ready() is not None
+
+        # The sender writes to the same queue the client reads from
+        client._sender._updates_queue.put_nowait('ping')
+        assert queue.get_nowait() == 'ping'
+
+    asyncio.run(run())
+
+
 def test_rate_limit_integration():
     import time
 

@@ -70,6 +70,25 @@ class _ExportState:
 
 
 # TODO How hard would it be to support both `trio` and `asyncio`?
+class _UpdatesQueueRef:
+    """
+    Delegates ``put_nowait`` to an updates queue that is resolved lazily.
+
+    Lets the MTProtoSender be constructed outside a running event loop:
+    it only ever needs ``put_nowait`` (called while processing updates,
+    i.e. inside a loop), and the real ``asyncio.Queue`` is created on
+    first use. On Python 3.9, constructing the queue up front would bind
+    it to a (possibly absent) current loop and raise RuntimeError.
+    """
+    __slots__ = ('_get_queue',)
+
+    def __init__(self, get_queue):
+        self._get_queue = get_queue
+
+    def put_nowait(self, item):
+        self._get_queue().put_nowait(item)
+
+
 class SoroushPlusBaseClient(abc.ABC):
     """
     This is the abstract base class for the client. It defines some
@@ -381,7 +400,13 @@ class SoroushPlusBaseClient(abc.ABC):
 
         # Cache ``{dc_id: (_ExportState, MTProtoSender)}`` for all borrowed senders
         self._borrowed_senders = {}
-        self._borrow_sender_lock = asyncio.Lock()
+        # Loop-bound asyncio primitives are created lazily (see the
+        # ``_get_*`` helpers): on Python 3.9 asyncio.Lock()/Queue()/Event()
+        # bind to the *current* event loop at construction time, which breaks
+        # clients built outside a running loop (the standard module-level
+        # pattern) once a previous asyncio.run() has cleared the loop policy.
+        # Every one of these is first touched from inside a running loop.
+        self._borrow_sender_lock = None
         self._exported_sessions = {}
 
         self._loop = None  # only used as a sanity check
@@ -425,7 +450,9 @@ class SoroushPlusBaseClient(abc.ABC):
 
         # This is backported from v2 in a very ad-hoc way just to get proper update handling
         self._catch_up = catch_up
-        self._updates_queue = asyncio.Queue()
+        # Lazy (see _borrow_sender_lock): created on first access, which is
+        # always inside a running loop (see the handoff in connect()).
+        self.__updates_queue = None
         self._message_box = MessageBox(self._log['messagebox'])
         self._mb_entity_cache = MbEntityCache()  # required for proper update handling (to know when to getDifference)
         self._entity_cache_limit = entity_cache_limit
@@ -439,9 +466,23 @@ class SoroushPlusBaseClient(abc.ABC):
             auto_reconnect=self._auto_reconnect,
             connect_timeout=self._timeout,
             auth_key_callback=self._auth_key_callback,
-            updates_queue=self._updates_queue,
+            updates_queue=_UpdatesQueueRef(lambda: self._updates_queue),
             auto_reconnect_callback=self._handle_auto_reconnect
         )
+
+
+    def _get_borrow_sender_lock(self) -> asyncio.Lock:
+        """Lazily create the borrow-sender lock (first use is in a loop)."""
+        if self._borrow_sender_lock is None:
+            self._borrow_sender_lock = asyncio.Lock()
+        return self._borrow_sender_lock
+
+    @property
+    def _updates_queue(self) -> asyncio.Queue:
+        """Lazily create the updates queue (first use is in a loop)."""
+        if self.__updates_queue is None:
+            self.__updates_queue = asyncio.Queue()
+        return self.__updates_queue
 
 
     # endregion
@@ -731,7 +772,7 @@ class SoroushPlusBaseClient(abc.ABC):
         await self._disconnect()
 
         # Also clean-up all exported senders because we're done with them
-        async with self._borrow_sender_lock:
+        async with self._get_borrow_sender_lock():
             for state, sender in self._borrowed_senders.values():
                 # Note that we're not checking for `state.should_disconnect()`.
                 # If the user wants to disconnect the client, ALL connections
@@ -899,7 +940,7 @@ class SoroushPlusBaseClient(abc.ABC):
 
         Once its job is over it should be `_return_exported_sender`.
         """
-        async with self._borrow_sender_lock:
+        async with self._get_borrow_sender_lock():
             self._log[__name__].debug('Borrowing sender for dc_id %d', dc_id)
             state, sender = self._borrowed_senders.get(dc_id, (None, None))
 
@@ -928,7 +969,7 @@ class SoroushPlusBaseClient(abc.ABC):
         Returns a borrowed exported sender. If all borrows have
         been returned, the sender is cleanly disconnected.
         """
-        async with self._borrow_sender_lock:
+        async with self._get_borrow_sender_lock():
             self._log[__name__].debug('Returning borrowed sender for dc_id %d', sender.dc_id)
             state, _ = self._borrowed_senders[sender.dc_id]
             state.add_return()
@@ -937,7 +978,7 @@ class SoroushPlusBaseClient(abc.ABC):
         """
         Cleans-up all unused exported senders by disconnecting them.
         """
-        async with self._borrow_sender_lock:
+        async with self._get_borrow_sender_lock():
             for dc_id, (state, sender) in self._borrowed_senders.items():
                 if state.should_disconnect():
                     self._log[__name__].info(
