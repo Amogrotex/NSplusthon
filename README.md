@@ -1,76 +1,30 @@
-<div align="center">
-
-<img src="logo.png" width="200" alt="NSplusthon — Python client for Soroush Plus">
-
-<h1>NSplusthon</h1>
-
-<p>
-  <strong>Async Python library for the Soroush Plus (سروش پلاس / SPlus) API</strong><br>
-  Telethon-style client for user accounts and bots. Fork of SPlusthon.
+<p align="center">
+  <img src="logo.png" width="160" alt="NSplusthon">
 </p>
+
+# NSplusthon
+
+Python client for [Soroush Plus](https://web.splus.ir) (سروش پلاس). Same general shape as [Telethon](https://github.com/LonamiWebs/Telethon): asyncio, events, `StringSession`. Works as a user or a bot. You don't need an API id/hash.
+
+Fork of [SPlusthon](https://github.com/shayanheidari01/SPlusthon). Import is `nsplusthon`; the client is still `SoroushClient`.
 
 <p dir="rtl">
-  کتابخانه‌ای مدرن و سریع بر پایه <strong>asyncio</strong> برای تعامل مستقیم
-  با API پیام‌رسان <strong>سروش پلاس</strong> — به‌عنوان <strong>کاربر</strong> یا <strong>ربات</strong>.
+کلاینت پایتون برای سروش پلاس. هم حساب کاربری، هم ربات. بدون API ID.
 </p>
 
-<p>
+[docs](https://amogrotex.github.io/NSplusthon/) ·
+[en](https://amogrotex.github.io/NSplusthon/en/) ·
+[pypi](https://pypi.org/project/nsplusthon/)
 
-<a href="https://pypi.org/project/nsplusthon/">
-  <img src="https://img.shields.io/pypi/v/nsplusthon.svg?style=for-the-badge" alt="PyPI">
-</a>
-
-<a href="https://pypi.org/project/nsplusthon/">
-  <img src="https://img.shields.io/pypi/pyversions/nsplusthon.svg?style=for-the-badge" alt="Python versions">
-</a>
-
-<a href="LICENSE">
-  <img src="https://img.shields.io/badge/License-GPL--3.0-lightblue.svg?style=for-the-badge" alt="License">
-</a>
-
-<a href="https://pypi.org/project/nsplusthon/">
-  <img src="https://img.shields.io/pypi/dm/nsplusthon?label=downloads&style=for-the-badge" alt="Downloads">
-</a>
-
-<a href="https://github.com/Amogrotex/NSplusthon/stargazers">
-  <img src="https://img.shields.io/github/stars/Amogrotex/NSplusthon?style=for-the-badge" alt="Stars">
-</a>
-
-<a href="https://github.com/Amogrotex/NSplusthon/issues">
-  <img src="https://img.shields.io/github/issues/Amogrotex/NSplusthon?style=for-the-badge" alt="Issues">
-</a>
-
-</p>
-
-<p>
-
-<a href="https://amogrotex.github.io/NSplusthon/"><strong>Documentation</strong></a>
-·
-<a href="https://amogrotex.github.io/NSplusthon/en/"><strong>English docs</strong></a>
-·
-<a href="https://pypi.org/project/nsplusthon/"><strong>PyPI</strong></a>
-·
-<a href="https://github.com/Amogrotex/NSplusthon"><strong>GitHub</strong></a>
-·
-<a href="https://web.splus.ir"><strong>Soroush Plus</strong></a>
-
-</p>
-
-</div>
-
----
-
-## What is NSplusthon?
-
-**NSplusthon** is an [asyncio](https://docs.python.org/3/library/asyncio.html) Python 3.9+ library that talks to **Soroush Plus** (سروش پلاس, also called **SPlus**) over MTProto — the same idea as [Telethon](https://github.com/LonamiWebs/Telethon) for Telegram.
-
-Use it to write **userbots** and **bots**: send messages and files, download media, handle events, and route commands. No API ID or API hash is required.
-
-It is a maintained fork of [SPlusthon](https://github.com/shayanheidari01/SPlusthon) with a faster AES-IGE path, a command router, rate limiting, and encrypted sessions. The import is `nsplusthon`; the client class is still `SoroushClient`.
-
-```bash
-pip install nsplusthon
 ```
+pip install nsplusthon
+# optional: faster crypto + socks + media helpers
+pip install "nsplusthon[fast]"
+```
+
+Python 3.9+. Don't name your file `nsplusthon.py`.
+
+## example
 
 ```python
 from nsplusthon import SoroushClient, events
@@ -80,112 +34,31 @@ client = SoroushClient(StringSession())
 
 @client.on(events.NewMessage)
 async def handler(event):
-    await event.reply("سلام 👋")
+    await event.reply("سلام")
 
 client.start()
 client.run_until_disconnected()
 ```
 
-> Do **not** name your script `nsplusthon.py` — it will shadow the package.
-
----
-
-## Why NSplusthon instead of SPlusthon / spluspy?
-
-| | **NSplusthon** | SPlusthon | spluspy |
-| --- | :---: | :---: | :---: |
-| Telethon-style `SoroushClient` | yes | yes | no |
-| AES-IGE (libssl, 256 KiB) | **~100 MiB/s** | ~5.6 MiB/s | ~5.9 MiB/s |
-| `import` time (lazy) | **~15 ms** | ~340 ms | — |
-| Command router + rate limit | yes | no | no |
-| Encrypted `StringSession` | yes | no | no |
-| Typed (`py.typed`) | yes | — | — |
-
-Full write-up: [Compare](https://amogrotex.github.io/NSplusthon/compare/) · [Migrate from SPlusthon](https://amogrotex.github.io/NSplusthon/migration/)
-
----
-
-## Features
-
-- User accounts **and** bots
-- High-performance **asyncio** client
-- **Command router**: `/help`, middleware, per-user state, rate limits
-- Sliding-window **RateLimiter** (avoid FloodWait / bans)
-- Passphrase-encrypted sessions (AES-IGE + PBKDF2)
-- Lazy import (PEP 562): `import nsplusthon` in ~15 ms
-- Sync **and** async APIs
-- Soroush **TL schema** (layer 182)
-- `StringSession` / `MemorySession` / `SQLiteSession`
-- WebSocket transport and DC routing
-- RSA + AES
-- **No API ID / API hash**
-- Telethon-like API so Telegram bots are easy to port
-- Typed package for Pyright / Pylance / mypy
-
-<p dir="rtl">
-
-- پشتیبانی کامل از **حساب کاربری** و **ربات**
-- 🎛️ **Command Router** با `/help` خودکار، middleware و rate-limit
-- 🔐 Session رمزنگاری‌شده با passphrase
-- 🪜 API مشابه Telethon برای مهاجرت آسان
-- 🗝️ بدون نیاز به API ID و API Hash
-
-</p>
-
----
-
-## Install
-
-Requires **Python 3.9+**.
-
-```bash
-pip install nsplusthon
-```
-
-Faster crypto, SOCKS proxies, and media helpers:
-
-```bash
-pip install "nsplusthon[fast]"
-```
-
-Latest git snapshot:
-
-```bash
-pip install "git+https://github.com/Amogrotex/NSplusthon.git"
-```
-
-| Extra | What you get |
-| --- | --- |
-| `cryptg` | Faster C crypto (recommended) |
-| `socks` | SOCKS proxies |
-| `fast` | `cryptg` + `socks` + Pillow + hachoir + isal |
-| `dev` | pytest stack |
-
-Core dependencies: `aiohttp`, `pyaes`, `rsa`.
-
----
-
-## Quick start
+Bot token:
 
 ```python
-from nsplusthon import SoroushClient
-from nsplusthon.sessions import StringSession
-
-client = SoroushClient(StringSession())
-client.start()
+client.start(bot_token="12345:…")
 ```
 
-Send a message, a file, or download media:
+Coming from SPlusthon? Change the import. That's most of it. Notes: [migration](https://amogrotex.github.io/NSplusthon/migration/).
+
+## usage
 
 ```python
-client.send_message("username", "سلام از NSplusthon")
-client.send_file("username", "/path/image.jpg")
+client.send_message("username", "سلام")
+client.send_file("username", "photo.jpg")
 
-message = client.get_messages("username", limit=1)[0]
-message.download_media()
+msg = client.get_messages("username", limit=1)[0]
+msg.download_media()
 ```
 
-### Sync API
+If you'd rather not write `async`/`await`:
 
 ```python
 from nsplusthon.sync import SoroushClient
@@ -193,100 +66,60 @@ from nsplusthon.sessions import StringSession
 
 with SoroushClient(StringSession()) as client:
     print(client.get_me())
-    client.send_message("username", "درود!")
+    client.send_message("username", "درود")
 ```
 
-### Saved / encrypted session
+Reuse a session string from a previous login:
 
 ```python
-from nsplusthon import SoroushClient
-from nsplusthon.sessions import StringSession
-
-session = "1AwA..."  # string from the first login
-
+session = "1AwA..."
 with SoroushClient(StringSession(session)) as client:
     print(client.get_me())
-
-enc = StringSession.encrypt_session(session, "passphrase")
-later = StringSession.from_encrypted(enc, "passphrase")
 ```
 
-### Command router
+Encrypt that string if you're stuffing it in an env var:
 
 ```python
-from nsplusthon import SoroushClient
-from nsplusthon.sessions import StringSession
+enc = StringSession.encrypt_session(session, "passphrase")
+session = StringSession.from_encrypted(enc, "passphrase")
+```
+
+Commands without hand-rolled parsers:
+
+```python
 from nsplusthon.router import Router
 
 router = Router().use_rate_limit(max_calls=40, period=60)
 
-@router.command("start", description="Says hello")
+@router.command("start")
 async def cmd_start(event, args, kwargs):
-    name = kwargs.get("name", "دوست")
-    await event.reply(f"سلام {name}!")
+    await event.reply("ok")
 
-client = SoroushClient(StringSession())
 client.use_router(router)
-client.start()
 ```
 
----
+## extras
 
-## Documentation
-
-Persian (default): [amogrotex.github.io/NSplusthon](https://amogrotex.github.io/NSplusthon/)
-
-- [Quick start](https://amogrotex.github.io/NSplusthon/quick-start/)
-- [English overview](https://amogrotex.github.io/NSplusthon/en/)
-- [Compare libraries](https://amogrotex.github.io/NSplusthon/compare/)
-- [Migrate from SPlusthon](https://amogrotex.github.io/NSplusthon/migration/)
-- [Command router](https://amogrotex.github.io/NSplusthon/concepts/router/)
-- [Examples](https://amogrotex.github.io/NSplusthon/examples/index/)
-- [FAQ](https://amogrotex.github.io/NSplusthon/faq/)
-
----
-
-## Performance
-
-AES-IGE via **libssl** (no cryptg), 256 KiB, Intel Xeon @ 2.60 GHz, Python 3.13.14, best of 9. Bit-identical to the C reference.
-
-| Library | Encrypt time | Throughput |
-| --- | :---: | :---: |
-| **NSplusthon** | **2.50 ms** | **100.1 MiB/s** |
-| SPlusthon | 44.86 ms | 5.6 MiB/s |
-| spluspy | 42.47 ms | 5.9 MiB/s |
-
-Micro-benchmarks (`benchmarks/microbench.py`) on Python 3.13:
-
-| Operation | Time |
+| extra | |
 | --- | --- |
-| `import nsplusthon` (lazy) | **~15 ms** (was ~340 ms) |
-| TL pack (`SendMessageRequest`) | 2.4 µs |
-| `StringSession` restore | 5.6 µs |
-| Router parse + resolve | 2.3 µs |
+| `cryptg` | C crypto |
+| `socks` | SOCKS |
+| `fast` | cryptg + socks + Pillow + hachoir + isal |
+| `dev` | pytest |
 
-Scripts: [`benchmarks/aes_ige_bench.py`](benchmarks/aes_ige_bench.py) · [`benchmarks/microbench.py`](benchmarks/microbench.py)
+Hard deps: `aiohttp`, `pyaes`, `rsa`.
 
----
+## numbers
 
-## Contributing
+AES-IGE through libssl, 256 KiB, no cryptg, best of 9 on a Xeon @ 2.60 GHz / CPython 3.13: about **100 MiB/s** here vs ~6 MiB/s for SPlusthon and spluspy on the same box. `import nsplusthon` is lazy and lands around 15 ms. Scripts are in `benchmarks/`.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Please open an issue first, work on a branch, and run `python -m compileall nsplusthon` before the PR.
+## docs
 
-## License
+- [quick start](https://amogrotex.github.io/NSplusthon/quick-start/)
+- [router](https://amogrotex.github.io/NSplusthon/concepts/router/)
+- [examples](https://amogrotex.github.io/NSplusthon/examples/index/)
+- [faq](https://amogrotex.github.io/NSplusthon/faq/)
 
-[GNU GPL v3](LICENSE).
+PRs: [CONTRIBUTING.md](CONTRIBUTING.md). License is [GPL-3.0](LICENSE). Not affiliated with Soroush Plus; their [terms](https://web.splus.ir) still apply.
 
-This is a **third-party** library and is not affiliated with Soroush Plus.
-Follow the [Soroush Plus terms](https://web.splus.ir). You are responsible for how you use it.
-
----
-
-<div align="center">
-
-**NSplusthon** is maintained by [AmoGrotex](https://github.com/Amogrotex).
-
-Forked from **SPlusthon** by [Shayan Heidari](https://github.com/shayanheidari01),
-which is based on [Telethon](https://github.com/LonamiWebs/Telethon) by Lonami.
-
-</div>
+Maintained by [AmoGrotex](https://github.com/Amogrotex). Upstream: SPlusthon (Shayan Heidari) ← Telethon (Lonami).
