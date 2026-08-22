@@ -8,8 +8,10 @@ def get_client():
 
 
 def get_user_456():
+    # Soroush's TL requires `user_type` (unlike Telegram's flag-based User)
     return types.User(
         id=456,
+        user_type=types.UserTypeNormal(),
         access_hash=789,
         first_name='User 123'
     )
