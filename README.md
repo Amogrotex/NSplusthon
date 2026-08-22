@@ -27,6 +27,10 @@
   <img src="https://img.shields.io/badge/License-GPL--3.0-lightblue.svg?style=for-the-badge" alt="License">
 </a>
 
+<a href="https://pypi.org/project/nsplusthon/">
+  <img src="https://img.shields.io/pypi/dm/nsplusthon?label=downloads&style=for-the-badge" alt="Downloads">
+</a>
+
 <a href="https://github.com/Amogrotex/NSplusthon/stargazers">
   <img src="https://img.shields.io/github/stars/Amogrotex/NSplusthon?style=for-the-badge" alt="Stars">
 </a>
