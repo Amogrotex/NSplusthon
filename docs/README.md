@@ -37,7 +37,7 @@ docs/
 ### نصب MkDocs
 
 ```bash
-pip install mkdocs mkdocs-material mkdocs-static-i18n
+pip install -U "mkdocs-material>=9"
 ```
 
 ### اجرای محلی
@@ -56,14 +56,15 @@ pip install mkdocs mkdocs-material mkdocs-static-i18n
 
 ### استقرار در GitHub Pages
 
-1. تغییرات را commit کنید:
-   ```bash
-   git add .
-   git commit -m "Update Persian documentation"
-   git push origin main
-   ```
-
-2. مستندات به صورت خودکار استقرار می‌یابند.
+> ⚠️ **توجه:** Workflowهای CI/CD فعلاً در `.github/workflows.disabled/`
+> قرار دارند. برای فعال‌سازی استقرار خودکار آن‌ها را به
+> `.github/workflows` منتقل کنید:
+>
+> ```bash
+> mv .github/workflows.disabled .github/workflows
+> ```
+>
+> تا آن زمان، از روش دستی زیر استفاده کنید.
 
 ### استقرار دستی
 

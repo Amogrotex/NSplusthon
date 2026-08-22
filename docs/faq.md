@@ -40,17 +40,9 @@ python3 -c "import nsplusthon; print(nsplusthon.__version__)"
 
 ## سوالات احراز هویت
 
-### چگونه API ID و Hash دریافت کنم؟
-
-1. به [my.telegram.org](https://my.telegram.org/) بروید
-2. با شماره تلفن حساب خود وارد شوید
-3. روی "API Development tools" کلیک کنید
-4. اطلاعات برنامه خود را پر کنید
-5. روی "Create application" کلیک کنید
-
 ### آیا می‌توانم بدون API ID از NSplusthon استفاده کنم؟
 
-بله، NSplusthon API credentials پیش‌فرض دارد:
+بله، NSplusthon API credentials پیش‌فرض برای سروش‌پلاس دارد و نیازی به دریافت کلید جداگانه نیست:
 
 ```python
 from nsplusthon import SoroushClient

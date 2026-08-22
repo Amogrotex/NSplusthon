@@ -1,16 +1,16 @@
 # راهنمای راه‌اندازی مستندات
 
-این فایل راهنمای کامل راه‌اندازی مستندات NSplusthon با استفاده از MkDocs است.
+این فایل راهنمای کامل ساخت و استقرار مستندات NSplusthon با **MkDocs Material** است.
 
 ## پیش‌نیازها
 
-- Python 3.7 یا بالاتر
+- Python 3.9 یا بالاتر
 - pip
 
 ## نصب وابستگی‌ها
 
 ```bash
-pip install mkdocs mkdocs-material
+pip install -U "mkdocs-material>=9"
 ```
 
 ## ساختار پروژه
@@ -18,96 +18,87 @@ pip install mkdocs mkdocs-material
 ```
 NSplusthon/
 ├── mkdocs.yml                 # تنظیمات MkDocs
-├── docs/                      # مستندات
-│   ├── index.md              # صفحه اصلی
-│   ├── installation.md       # نصب و راه‌اندازی
-│   ├── quick-start.md        # شروع سریع
-│   ├── api-reference.md      # مرجع API
-│   ├── faq.md                # سوالات متداول
-│   ├── concepts/             # مفاهیم پایه
-│   ├── examples/             # مثال‌ها
-│   └── stylesheets/          # استایل‌های اضافی
-├── .github/workflows/        # GitHub Actions
-│   └── deploy-docs.yml       # استقرار خودکار
-└── test_mkdocs.py            # اسکریپت تست
+├── docs/                      # محتوای مستندات
+│   ├── index.md               # صفحه اصلی
+│   ├── installation.md        # نصب و راه‌اندازی
+│   ├── quick-start.md         # شروع سریع
+│   ├── api-reference.md       # مرجع API
+│   ├── faq.md                 # سوالات متداول
+│   ├── concepts/              # مفاهیم پایه
+│   └── examples/              # مثال‌ها
+├── .github/
+│   └── workflows.disabled/    # Workflowهای غیرفعال (deploy-docs.yml, ...)
+└── site/                      # خروجی build (موقت، در git ignore است)
 ```
 
 ## دستورات پرکاربرد
 
-### اجرای محلی
+### اجرای محلی (با hot-reload)
 
 ```bash
 mkdocs serve
 ```
 
-مرورگر را به `http://localhost:8000` باز کنید.
+سپس مرورگر را به `http://localhost:8000` باز کنید.
 
-### ساخت مستندات
+### ساخت نسخه نهایی
 
 ```bash
 mkdocs build
 ```
 
-فایل‌های HTML در دایرکتوری `site/` ایجاد می‌شوند.
+خروجی HTML در دایرکتوری `site/` ایجاد می‌شود.
 
-### استقرار در GitHub Pages
+### استقرار دستی در GitHub Pages
 
 ```bash
 mkdocs gh-deploy
 ```
 
-یا از GitHub Actions استفاده کنید (فایل `.github/workflows/deploy-docs.yml`).
+> ℹ️ Workflowهای CI/CD (از جمله `deploy-docs.yml`) فعلاً در
+> `.github/workflows.disabled/` قرار دارند. برای فعال‌سازی استقرار خودکار،
+> دایرکتوری را به `.github/workflows` رنیم کنید:
+>
+> ```bash
+> mv .github/workflows.disabled .github/workflows
+> ```
 
-### تست مستندات
+## ویژگی‌های مورد استفاده
 
-```bash
-python test_mkdocs.py
-```
+- **تم Material**: طراحی مدرن با تم روشن/تاریک
+- **پشتیبانی RTL**: `direction: rtl` + فونت Vazirmatn برای متن فارسی
+- **جستجو**: سرچ تمام‌متن در مستندات
+- **کپی کد**: دکمه کپی روی بلاک‌های کد
+- **واکنش‌گرا**: نمایش صحیح در موبایل و دسکتاپ
 
-## ویژگی‌های MkDocs
+## پیکربندی (`mkdocs.yml`)
 
-- **تم Material**: طراحی زیبا و مدرن
-- **پشتیبانی RTL**: مستندات فارسی با پشتیبانی راست به چپ
-- **جستجو**: قابلیت جستجو در مستندات
-- **رنگ‌بندی کد**: نمایش زیبای کدهای نمونه
-- **فهرست مطالب**: ناوبری آسان
-- **واکنش‌گرا**: نمایش صحیح در تمام دستگاه‌ها
-
-## پیکربندی
-
-فایل `mkdocs.yml` تنظیمات اصلی را شامل می‌شود:
-
-- **site_name**: نام سایت
-- **theme**: تم و تنظیمات نمایشی
-- **nav**: ساختار ناوبری
-- **plugins**: افزونه‌ها
-- **markdown_extensions**: افزونه‌های Markdown
-
-## استقرار خودکار
-
-GitHub Actions workflow در `.github/workflows/deploy-docs.yml`:
-
-1. در هر push به شاخه `main` اجرا می‌شود
-2. مستندات را می‌سازد
-3. در شاخه `gh-pages` استقرار می‌دهد
+- `site_name` / `site_description` / `site_url`: مشخصات سایت
+- `theme`: تم Material، زبان `fa`، جهت RTL، پالت indigo
+- `nav`: ساختار ناوبری صفحات
+- `markdown_extensions`: افزونه‌های Markdown (admonition، tables، ...)
 
 ## عیب‌یابی
 
-### خطای "command not found: mkdocs"
-
-وابستگی‌ها را نصب کنید:
+### `command not found: mkdocs`
 
 ```bash
-pip install mkdocs mkdocs-material
+pip install -U "mkdocs-material>=9"
 ```
 
-### خطای "No such file: docs/index.md"
+اگر از virtualenv استفاده می‌کنید، مطمئن شوید فعال است.
 
-مطمئن شوید در دایرکتوری ریشه پروژه هستید و دایرکتوری `docs` وجود دارد.
+### `No such file: docs/index.md`
 
-### خطای YAML در mkdocs.yml
+در دایرکتوری **ریشه‌ی** پروژه (جایی که `mkdocs.yml` وجود دارد) دستور را اجرا کنید.
 
-سینتکس YAML را بررسی کنید و از فاصله‌گذاری صحیح استفاده کنید.
+### خطای YAML در `mkdocs.yml`
+
+سینتکس و **فاصله‌گذاری** YAML را بررسی کنید (YAML به جای indentation از space استفاده می‌کند، نه tab).
+
+### صفحه‌ها در ناوبری نمایش داده نمی‌شوند
+
+مطمئن شوید فایل مربوطه در `nav` داخل `mkdocs.yml` ثبت شده است؛ در غیر این صورت MkDocs آن را build می‌کند ولی در منو نشان نمی‌دهد.
 
 ## منابع
 

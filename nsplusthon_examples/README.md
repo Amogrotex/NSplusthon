@@ -5,29 +5,26 @@ This folder contains several single-file examples using [NSplusthon].
 ## Requisites
 
 You should have the `nsplusthon` library installed with `pip`.
-Run `python3 -m pip install --upgrade nsplusthon --user` if you don't
+Run `python3 -m pip install --upgrade nsplusthon` if you don't
 have it installed yet (this is the most portable way to install it).
 
-The scripts will ask you for your API ID, hash, etc. through standard input.
-You can also define the following environment variables to avoid doing so:
+NSplusthon ships with default credentials, so **most examples run without
+any API ID or hash** — just start them and log in with your phone number.
 
-* `TG_API_ID`, this is your API ID from https://my.telegram.org.
-* `TG_API_HASH`, this is your API hash from https://my.telegram.org.
-* `TG_TOKEN`, this is your bot token from [@BotFather] for bot examples.
-* `TG_SESSION`, this is the name of the `*.session` file to use.
+A couple of examples (`assistant.py`, `gui.py`) still accept explicit
+credentials through standard input, or through these environment variables:
 
-## Downloading Examples
+* `TG_API_ID` — your API ID (optional, NSplusthon default is used otherwise)
+* `TG_API_HASH` — your API hash (optional, NSplusthon default is used otherwise)
+* `TG_SESSION` — the name of the `*.session` file to use
 
-You may download all and run any example by typing in a terminal:
+## Running Examples
+
 ```sh
 git clone https://github.com/Amogrotex/NSplusthon.git
-cd NSplusthon
-cd nsplusthon_examples
-python3 gui.py
+cd NSplusthon/nsplusthon_examples
+python3 print_updates.py
 ```
-
-You can also right-click the title of any example and use "Save Link As…" to
-download only a particular example.
 
 All examples are licensed under the [CC0 License], so you can use
 them as the base for your own code without worrying about copyright.
@@ -71,16 +68,13 @@ not really needed for the previous two trivial examples.
 * Usable as a: **bot**.
 * Difficulty: **medium**.
 
-This example is the core of the actual bot account [@NSplusthonianBot] running
-in the [official NSplusthon's chat] to help people out. It showcases how to
-create an extremely simple "plugins" system with NSplusthon, but you're free
-to borrow ideas from it and make it as fancy as you like (perhaps you want
-to add hot reloading?).
+A simple assistant bot that showcases how to build an extremely simple
+"plugins" system with NSplusthon — you're free to borrow ideas from it and
+make it as fancy as you like (perhaps you want to add hot reloading?).
 
-The plugins are a separate Python file each which get loaded dynamically and
-can be found at <https://github.com/shayanheidari01/SPlusthonianBotExt>. To use them,
-clone the repository into a `plugins` folder next to `assistant.py` and then
-run `assistant.py`.
+The plugins are separate Python files that get loaded dynamically from a
+`plugins` folder next to `assistant.py`. Drop your own plugin files there
+to see them loaded at startup.
 
 The content of the plugins or how they work is not really relevant. You can
 disable them by moving them elsewhere or deleting the file entirely. The point
@@ -109,9 +103,8 @@ The example should work as a base for Quart applications *with a single
 global client*, and it should be easy to adapt for multiple clients by
 following the comments in the code.
 
-It showcases how to login manually (ask for phone, code, and login),
-and once the user is logged in, some messages and photos will be shown
-in the page.
+It showcases how to login manually (ask for phone and code), and once the
+user is logged in, some messages and photos will be shown in the page.
 
 There is nothing special about Quart. It was chosen because it's a
 drop-in replacement for Flask, the most popular option for web-apps.
@@ -125,43 +118,45 @@ if you learn how to use `threading` and `asyncio` together.
 * Usable as: **user and bot**.
 * Difficulty: **high**.
 
-This is a simple GUI written with [`tkinter`] which becomes more complicated
+A simple GUI written with [`tkinter`] which becomes more complicated
 when there's a need to use [`asyncio`] (although it's only a bit of additional
 setup). The code to deal with the interface and the commands the GUI supports
-also complicate the code further and require knowledge and careful reading.
+also complicates the code further and requires knowledge and careful reading.
 
-This example is the actual bot account [@NSplusthonianBot] running in the
-[official NSplusthon's chat] to help people out. The file is a bit big and
-assumes some [`asyncio`] knowledge, but otherwise is easy to follow.
+The file is a bit big and assumes some [`asyncio`] knowledge, but otherwise
+is easy to follow.
 
 ![Screenshot of the tkinter GUI][tkinter GUI]
 
-### [`payment.py`](https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/payment.py)
+### [`payment.py`]
 
 * Usable as: **bot**.
 * Difficulty: **medium**.
 
-This example shows how to make invoices (Soroush Plus's way of requesting payments) via a bot account. The example does not include how to add shipping information, though.
+This example shows how to make invoices (Soroush Plus's way of requesting
+payments) via a bot account. The example does not include how to add
+shipping information, though.
 
-You'll need to obtain a "provider token" to use this example, so please read [Soroush Plus's guide on payments](https://core.telegram.org/bots/payments) before using this example.
+You'll need to obtain a "provider token" to use this example, so please read
+the [Soroush Plus documentation](https://web.splus.ir) on payments before
+using this example.
 
-
-It makes use of the ["raw API"](https://tl.nsplusthon.dev) (that is, no friendly `client.` methods), which can be helpful in understanding how it works and how it can be used.
+It makes use of the ["raw API"] (that is, no friendly `client.` methods),
+which can be helpful in understanding how it works and how it can be used.
 
 
 [NSplusthon]: https://github.com/Amogrotex/NSplusthon
-[CC0 License]: https://github.com/Amogrotex/NSplusthon/blob/v1/nsplusthon_examples/LICENSE
-[@BotFather]: https://t.me/BotFather
-[`assistant.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/assistant.py
-[`quart_login.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/quart_login.py
-[`gui.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/gui.py
-[`interactive_telegram_client.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/interactive_telegram_client.py
-[`print_messages.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/print_messages.py
-[`print_updates.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/print_updates.py
-[`replier.py`]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/replier.py
-[@NSplusthonianBot]: https://t.me/NSplusthonianBot
-[official NSplusthon's chat]: https://t.me/NSplusthonChat
+[CC0 License]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/LICENSE
+["raw API"]: https://Amogrotex.github.io/NSplusthon/concepts/full-api/
+[`assistant.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/assistant.py
+[`quart_login.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/quart_login.py
+[`gui.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/gui.py
+[`interactive_telegram_client.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/interactive_telegram_client.py
+[`payment.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/payment.py
+[`print_messages.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/print_messages.py
+[`print_updates.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/print_updates.py
+[`replier.py`]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/replier.py
 [`asyncio`]: https://docs.python.org/3/library/asyncio.html
 [`tkinter`]: https://docs.python.org/3/library/tkinter.html
-[tkinter GUI]: https://raw.githubusercontent.com/Amogrotex/NSplusthon/v1/nsplusthon_examples/screenshot-gui.jpg
-[`events.NewMessage`]: https://docs.nsplusthon.dev/en/stable/modules/events.html#nsplusthon.events.newmessage.NewMessage
+[tkinter GUI]: https://github.com/Amogrotex/NSplusthon/blob/main/nsplusthon_examples/screenshot-gui.jpg
+[`events.NewMessage`]: https://Amogrotex.github.io/NSplusthon/concepts/events/

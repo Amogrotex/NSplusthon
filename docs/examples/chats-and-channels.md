@@ -62,7 +62,7 @@ from nsplusthon.tl.functions.messages import ImportChatInviteRequest
 async def main():
     with SoroushClient('anon', api_id, api_hash) as client:
         # عضویت با لینک دعوت
-        # لینک دعوت: https://t.me/joinchat/AAAAAFFszQPyPEZ7wgxLtd
+        # لینک دعوت را از منوی گروه/کانال سروش پلاس کپی کنید
         # هش: AAAAFAFFszQPyPEZ7wgxLtd
         updates = await client(ImportChatInviteRequest('AAAAAFFszQPyPEZ7wgxLtd'))
         

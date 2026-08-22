@@ -204,7 +204,7 @@ asyncio.run(main())
 ## نکات مهم
 
 !!! note "یادداشت"
-    این مثال‌ها فرض می‌کنند که شما API ID و Hash خود را از [my.telegram.org](https://my.telegram.org/) دریافت کرده‌اید.
+    NSplusthon credentials پیش‌فرض دارد؛ بیشتر مثال‌ها بدون API ID و Hash جداگانه اجرا می‌شوند.
 
 ---
 

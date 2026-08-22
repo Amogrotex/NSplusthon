@@ -65,11 +65,11 @@ dialogs = await client.get_dialogs()
 
 # تمام اینها کار می‌کنند و یک کار را انجام می‌دهند
 username = await client.get_entity('username')
-username = await client.get_entity('t.me/username')
-username = await client.get_entity('https://telegram.dog/username')
+username = await client.get_entity('s.plus/username')
+username = await client.get_entity('https://web.splus.ir/username')
 
 # نوع دیگر Entity
-channel = await client.get_entity('telegram.me/joinchat/AAAAAEkk2WdoDrB4-Q8-gg')
+channel = await client.get_entity('channel')
 contact = await client.get_entity('+989123456789')
 friend  = await client.get_entity(friend_id)
 

@@ -27,8 +27,8 @@ SoroushClient(session=None, api_id=None, api_hash=None,
 | پارامتر | نوع | پیش‌فرض | توضیحات |
 |---------|-----|---------|---------|
 | session | str/Session | None | نام session یا شیء Session |
-| api_id | int | None | شناسه API از my.telegram.org |
-| api_hash | str | None | هش API از my.telegram.org |
+| api_id | int | None | شناسه API (پیش‌فرض: credentials داخلی NSplusthon) |
+| api_hash | str | None | هش API (پیش‌فرض: credentials داخلی NSplusthon) |
 | connection_retries | int | None | تعداد تلاش‌های اتصال مجدد |
 | timeout | timedelta | 60 ثانیه | زمان انتظار برای درخواست‌ها |
 | request_retries | int | None | تعداد تلاش‌های درخواست مجدد |

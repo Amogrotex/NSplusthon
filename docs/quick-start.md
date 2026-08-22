@@ -24,9 +24,9 @@ client = SoroushClient(StringSession())
 client.start()
 ```
 
-### روش استاندارد (با API ID و Hash)
+### روش با API ID و Hash دلخواه
 
-برای استفاده استاندارد، ابتدا باید API ID و Hash خود را از [my.telegram.org](https://my.telegram.org/) دریافت کنید:
+در صورتی که credentials اختصاصی خود را دارید، می‌توانید آن‌ها را به کلاینت بدهید (اختیاری — NSplusthon به‌طور پیش‌فرض بدون آن‌ها کار می‌کند):
 
 ```python
 from nsplusthon import SoroushClient
