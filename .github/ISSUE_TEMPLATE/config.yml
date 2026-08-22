@@ -1,8 +1,8 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: Ask questions in StackOverflow
-    url: https://stackoverflow.com/questions/ask?tags=nsplusthon
-    about: Questions are not bugs. Please ask them in StackOverflow instead. Questions in the bug tracker will be closed
-  - name: Find about updates and our SoroushPlus groups
-    url: https://t.me/s/NSplusthonUpdates
-    about: Be notified of updates, chat with other people about the library or ask questions in these groups
+  - name: Documentation
+    url: https://amogrotex.github.io/NSplusthon/
+    about: Persian docs, English overview, comparison, and SPlusthon migration
+  - name: PyPI package
+    url: https://pypi.org/project/nsplusthon/
+    about: Install with pip install nsplusthon

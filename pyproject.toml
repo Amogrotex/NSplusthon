@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "NSplusthon"
 dynamic = ["version"]
-description = "Asynchronous Python library for the Soroush Plus API"
+description = "Async Python client for Soroush Plus (سروش پلاس / SPlus) — Telethon-style SoroushClient, fork of SPlusthon"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = {text = "GPL-3.0-only"}
 requires-python = ">=3.9"
@@ -13,18 +13,28 @@ authors = [{name = "AmoGrotex"}]
 maintainers = [{name = "AmoGrotex"}]
 keywords = [
     "soroush",
+    "soroush-plus",
+    "soroushplus",
     "splus",
+    "splusthon",
     "nsplusthon",
+    "spluspy",
     "mtproto",
     "asyncio",
+    "telethon",
+    "userbot",
+    "bot",
     "chat",
     "client",
     "messaging",
+    "iran",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Natural Language :: Persian",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.9",
@@ -33,6 +43,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Communications :: Chat",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
 dependencies = [
@@ -59,8 +70,10 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/Amogrotex/NSplusthon"
-Documentation = "https://Amogrotex.github.io/NSplusthon/"
+Documentation = "https://amogrotex.github.io/NSplusthon/"
+"Documentation (EN)" = "https://amogrotex.github.io/NSplusthon/en/"
 Repository = "https://github.com/Amogrotex/NSplusthon"
+Changelog = "https://github.com/Amogrotex/NSplusthon/blob/main/CHANGELOG.md"
 Issues = "https://github.com/Amogrotex/NSplusthon/issues"
 PyPI = "https://pypi.org/project/nsplusthon/"
 

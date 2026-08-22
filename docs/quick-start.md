@@ -16,7 +16,7 @@ hide:
 NSplusthon دارای API credentials پیش‌فرض برای سروش‌پلاس است، بنابراین می‌توانید بدون دریافت کلیدهای خود، کلاینت ایجاد کنید:
 
 ```python
-from nsplusthon import SoroushClient, events, sync
+from nsplusthon import SoroushClient
 from nsplusthon.sessions import StringSession
 
 # بدون نیاز به api_id یا api_hash
@@ -24,19 +24,22 @@ client = SoroushClient(StringSession())
 client.start()
 ```
 
+ورود با توکن ربات:
+
+```python
+client.start(bot_token="12345:abcdef")
+```
+
 ### روش با API ID و Hash دلخواه
 
-در صورتی که credentials اختصاصی خود را دارید، می‌توانید آن‌ها را به کلاینت بدهید (اختیاری — NSplusthon به‌طور پیش‌فرض بدون آن‌ها کار می‌کند):
+اختیاری است — NSplusthon بدون آن‌ها کار می‌کند. فقط اگر credentials اختصاصی دارید پاس بدهید:
 
 ```python
 from nsplusthon import SoroushClient
 
-api_id = 12345
-api_hash = '0123456789abcdef0123456789abcdef'
-
-# اولین پارامتر نام فایل session است
-with SoroushClient('anon', api_id, api_hash) as client:
-    client.loop.run_until_complete(client.send_message('me', 'سلام، خودم!'))
+# اولین پارامتر نام فایل session است (.session در پوشه جاری ساخته می‌شود)
+with SoroushClient("anon", api_id=YOUR_API_ID, api_hash=YOUR_API_HASH) as client:
+    client.loop.run_until_complete(client.send_message("me", "سلام، خودم!"))
 ```
 
 !!! important "مهم"
@@ -149,10 +152,9 @@ async for message in client.iter_messages('me'):
 
 ```python
 from nsplusthon import SoroushClient
+from nsplusthon.sessions import StringSession
 
-api_id = 12345
-api_hash = '0123456789abcdef0123456789abcdef'
-client = SoroushClient('anon', api_id, api_hash)
+client = SoroushClient(StringSession())
 
 async def main():
     # دریافت اطلاعات خودتان

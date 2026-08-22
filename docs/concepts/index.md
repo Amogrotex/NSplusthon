@@ -77,6 +77,14 @@ hide:
 
     [:octicons-arrow-right-24: یاد بگیرید](asyncio.md)
 
+-   :material-console:{ .lg .middle } __Command Router__
+
+    ---
+
+    چارچوب دستورات، `/help`، middleware و rate-limit.
+
+    [:octicons-arrow-right-24: یاد بگیرید](router.md)
+
 </div>
 
 ---

@@ -5,6 +5,21 @@
  * (direction: rtl, font: Vazirmatn, palette: black/white).
  */
 
+/* English sections embedded in RTL pages */
+.md-typeset [dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+}
+
+.md-typeset [dir="ltr"] table:not([class]) {
+    direction: ltr;
+}
+
+.md-typeset [dir="ltr"] table:not([class]) th,
+.md-typeset [dir="ltr"] table:not([class]) td {
+    text-align: left;
+}
+
 /* Code is always LTR, even in an RTL page */
 .md-typeset code {
     direction: ltr;
