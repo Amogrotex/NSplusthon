@@ -62,7 +62,9 @@ class MTProtoSender:
         self._auth_key_callback = auth_key_callback
         self._updates_queue = updates_queue
         self._auto_reconnect_callback = auto_reconnect_callback
-        self._connect_lock = asyncio.Lock()
+        # Lazy: on Python 3.9 asyncio.Lock() binds to the current event loop
+        # at construction time; the lock is first used in connect() (in a loop)
+        self._connect_lock = None
         self._ping = None
 
         # Whether the user has explicitly connected or disconnected.
@@ -121,13 +123,19 @@ class MTProtoSender:
             DestroyAuthKeyFail.CONSTRUCTOR_ID: self._handle_destroy_auth_key,
         }
 
+    def _get_connect_lock(self) -> asyncio.Lock:
+        """Lazily create the connect lock (first use is inside a loop)."""
+        if self._connect_lock is None:
+            self._connect_lock = asyncio.Lock()
+        return self._connect_lock
+
     # Public API
 
     async def connect(self, connection):
         """
         Connects to the specified given connection using the given auth key.
         """
-        async with self._connect_lock:
+        async with self._get_connect_lock():
             if self._user_connected:
                 self._log.info('User is already connected!')
                 return False
@@ -179,6 +187,13 @@ class MTProtoSender:
         """
         if not self._user_connected:
             raise ConnectionError('Cannot send requests while disconnected')
+
+        if self._ping is None:
+            # Keepalive: piggyback a ping on outgoing traffic so the
+            # _RECV_TIMEOUT watchdog in _recv_loop doesn't mistake a quiet
+            # but healthy connection for a dead one (an idle session with
+            # no updates would otherwise force-reconnect every 90s).
+            self._keepalive_ping(helpers.generate_random_long())
 
         if not utils.is_list_like(request):
             try:
