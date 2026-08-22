@@ -29,9 +29,17 @@ class MessagePacker:
     def __init__(self, state, loggers):
         self._state = state
         self._deque = collections.deque()
-        self._ready = asyncio.Event()
+        # Lazy: on Python 3.9 asyncio.Event() binds to the current event
+        # loop at construction time; the event is first touched from the
+        # send/recv loops (inside a running loop).
+        self._ready = None
         self._log = loggers[__name__]
         self._buffer = io.BytesIO()
+
+    def _get_ready(self):
+        if self._ready is None:
+            self._ready = asyncio.Event()
+        return self._ready
 
     def _reset_buffer(self):
         self._buffer.seek(0)
@@ -39,11 +47,11 @@ class MessagePacker:
 
     def append(self, state):
         self._deque.append(state)
-        self._ready.set()
+        self._get_ready().set()
 
     def extend(self, states):
         self._deque.extend(states)
-        self._ready.set()
+        self._get_ready().set()
 
     async def get(self):
         """
@@ -52,9 +60,10 @@ class MessagePacker:
         If the cancellation occurs or only invalid items were in the
         queue, (None, None) will be returned instead.
         """
+        ready = self._get_ready()
         if not self._deque:
-            self._ready.clear()
-            await self._ready.wait()
+            ready.clear()
+            await ready.wait()
 
         # Reuse buffer to avoid repeated allocation
         self._reset_buffer()
