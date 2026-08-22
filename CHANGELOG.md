@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.5
+
+Docs and packaging release so PyPI/search actually describe the project.
+
+- Bilingual README (this is the PyPI long description)
+- English overview, SPlusthon comparison and migration pages
+- Keywords: soroush-plus, splusthon, telethon, userbot
+- Python 3.9 called out everywhere; dead `tl.nsplusthon.dev` / `v1.zip` links removed
+
 ## Unreleased
 
 ### Docs
