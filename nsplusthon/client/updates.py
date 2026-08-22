@@ -136,6 +136,29 @@ class UpdateMethods:
 
         return decorator
 
+    def use_router(self: 'SoroushClient', router) -> 'SoroushClient':
+        """
+        Attach a `nsplusthon.router.Router` (command framework) to this
+        client. Incoming messages are parsed as commands and dispatched
+        to the registered handlers.
+
+        Example
+            .. code-block:: python
+
+                from nsplusthon.router import Router
+
+                router = Router()
+
+                @router.command('start')
+                async def cmd_start(event):
+                    await event.reply('Hi!')
+
+                client = SoroushClient(...)
+                client.use_router(router)
+        """
+        router.attach(self)
+        return self
+
     def add_event_handler(
             self: 'SoroushClient',
             callback: Callback,

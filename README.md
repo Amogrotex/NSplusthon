@@ -61,6 +61,10 @@
 
 - ✅ پشتیبانی کامل از **حساب کاربری** و **ربات**
 - ⚡ مبتنی بر **asyncio** با کارایی بالا
+- 🎛️ **Command Router**: چارچوب دستورات با `/help` خودکار، middleware، state کاربر و rate-limit
+- 🚦 **RateLimiter** per-chat (sliding window) برای جلوگیری از FloodWait و بن
+- 🔐 **Session رمزنگاری‌شده** با passphrase (AES-IGE + PBKDF2)
+- ⚡ **ایمپورت lazy** (PEP 562): `import nsplusthon` در ~۱۵ میلی‌ثانیه
 - 🔄 استفاده همزمان به‌صورت **Sync** و **Async**
 - 🧩 پشتیبانی کامل از **TL Schema** اختصاصی سروش (Layer 182)
 - 💾 مدیریت انعطاف‌پذیر Session: `StringSession` / `MemorySession` / `SQLiteSession`
@@ -69,7 +73,7 @@
 - 🗝️ **بدون نیاز به API ID و API Hash**
 - 🪜 API مشابه Telethon برای مهاجرت آسان
 - 📝 پکیج **Typed** (`py.typed`) — تایپ‌چک کامل با Pyright / Pylance / mypy
-- 🚀 مسیر OpenSSL بهینه برای AES-IGE (چند برابر سریع‌تر از کتابخانه‌های مشابه)
+- 🚀 مسیر OpenSSL بهینه برای AES-IGE (~۱۰۰ MiB/s)
 
 ## 📊 عملکرد
 
@@ -86,7 +90,16 @@ Intel Xeon @ 2.60GHz، Python 3.13.14، بهترینِ ۹ اجرا.
 NSplusthon روی این مسیر حدود **۱۸ برابر** سریع‌تر است
 (`from_buffer_copy` به‌جای کپی بایت‌به‌بایت در سطح Python).
 
-اسکریپت بنچمارک: [`benchmarks/aes_ige_bench.py`](benchmarks/aes_ige_bench.py)
+بنچمارک‌های میکرو (`benchmarks/microbench.py`) روی Python 3.13:
+
+| عملیات | زمان |
+| --- | --- |
+| `import nsplusthon` (lazy) | **~۱۵ ms** (قبلاً ~۳۴۰ ms) |
+| TL pack (SendMessageRequest) | 2.4 µs |
+| StringSession restore | 5.6 µs |
+| Router parse + resolve | 2.3 µs |
+
+اسکریپت‌ها: [`benchmarks/aes_ige_bench.py`](benchmarks/aes_ige_bench.py) · [`benchmarks/microbench.py`](benchmarks/microbench.py)
 
 ## 🚀 نصب
 
@@ -196,6 +209,47 @@ with SoroushClient(StringSession(session)) as client:
     print(client.get_me())
 ```
 
+### Session رمزنگاری‌شده
+
+اگر session را در فایل یا متغیر محیطی ذخیره می‌کنید، می‌توانید آن را با
+passphrase رمزنگاری کنید (AES-IGE + PBKDF2-SHA256):
+
+```python
+from nsplusthon.sessions import StringSession
+
+enc = StringSession.encrypt_session(session, "passphrase")   # ذخیره کنید
+later = StringSession.from_encrypted(enc, "passphrase")      # بازیابی
+```
+
+## 🎛️ Command Router
+
+دستورهای ربات را بدون پارسینگ دستی تعریف کنید — `/help` خودکار،
+middleware، state کاربر و rate-limit همه درون‌سازی شده‌اند:
+
+```python
+from nsplusthon import SoroushClient
+from nsplusthon.sessions import StringSession
+from nsplusthon.router import Router
+
+router = Router().use_rate_limit(max_calls=40, period=60)
+
+@router.command('start', description='سلام می‌گوید')
+async def cmd_start(event, args, kwargs):
+    name = kwargs.get('name', 'دوست')
+    await event.reply(f'سلام {name}!')
+
+@router.command('setname', usage='<name>')
+async def cmd_setname(event, args):
+    router.user_state(event.sender_id)['name'] = args[0]
+    await event.reply('ثبت شد')
+
+client = SoroushClient(StringSession())
+client.use_router(router)          # یا router.attach(client)
+client.start()
+```
+
+مستندات کامل: [Command Router](https://Amogrotex.github.io/NSplusthon/concepts/router/)
+
 ## 📚 مستندات
 
 مستندات کامل پروژه (فارسی):
@@ -204,6 +258,7 @@ with SoroushClient(StringSession(session)) as client:
 
 - [شروع سریع](https://Amogrotex.github.io/NSplusthon/quick-start/)
 - [مفاهیم پایه](https://Amogrotex.github.io/NSplusthon/concepts/index/)
+- [Command Router](https://Amogrotex.github.io/NSplusthon/concepts/router/)
 - [مثال‌ها](https://Amogrotex.github.io/NSplusthon/examples/index/)
 - [سوالات متداول](https://Amogrotex.github.io/NSplusthon/faq/)
 

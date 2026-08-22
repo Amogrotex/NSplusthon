@@ -1,5 +1,6 @@
 import base64
 import ipaddress
+import os
 import struct
 
 from .abstract import Session
@@ -70,3 +71,70 @@ class StringSession(MemorySession):
             self.port,
             self.auth_key.key
         ))
+
+    # ------------------------------------------------------------------
+    # passphrase-protected sessions
+    # ------------------------------------------------------------------
+    ENCRYPTED_VERSION = 'E1'
+    _KDF_ITERATIONS = 120_000
+
+    @staticmethod
+    def _derive_key(passphrase: str, salt: bytes) -> bytes:
+        import hashlib
+        return hashlib.pbkdf2_hmac(
+            'sha256', passphrase.encode('utf-8'), salt,
+            StringSession._KDF_ITERATIONS)
+
+    @classmethod
+    def encrypt_session(cls, session: str, passphrase: str) -> str:
+        """
+        Encrypt a plain session string with a passphrase (AES-IGE,
+        PBKDF2-SHA256 key derivation). Returns a self-describing string
+        that starts with ``E1``.
+
+        The result is safe to store in a config file or environment
+        variable — without the passphrase the auth key is unreadable.
+        """
+        if not session or session[0] != CURRENT_VERSION:
+            raise ValueError('not a valid NSplusthon session string')
+        if not passphrase:
+            raise ValueError('passphrase must not be empty')
+
+        from ..crypto import AES
+        data = session.encode('utf-8')
+        pad = 16 - (len(data) % 16)
+        data = data + bytes([pad]) * pad
+        salt = os.urandom(16)
+        iv = os.urandom(32)
+        key = cls._derive_key(passphrase, salt)
+        ct = AES.encrypt_ige(data, key, iv)
+        return cls.ENCRYPTED_VERSION + cls.encode(salt + iv + ct)
+
+    @classmethod
+    def decrypt_session(cls, encrypted: str, passphrase: str) -> str:
+        """
+        Reverse of :meth:`encrypt_session`. Raises ``ValueError`` if the
+        string is not an encrypted session or the passphrase is wrong.
+        """
+        if not encrypted or not encrypted.startswith(cls.ENCRYPTED_VERSION):
+            raise ValueError('not an encrypted session string')
+        blob = cls.decode(encrypted[len(cls.ENCRYPTED_VERSION):])
+        if len(blob) < 16 + 32 + 16:
+            raise ValueError('malformed encrypted session string')
+        salt, iv, ct = blob[:16], blob[16:48], blob[48:]
+
+        from ..crypto import AES
+        key = cls._derive_key(passphrase, salt)
+        data = AES.decrypt_ige(ct, key, iv)
+        try:
+            pad = data[-1]
+            if not 1 <= pad <= 16 or data[-pad:] != bytes([pad]) * pad:
+                raise ValueError
+        except ValueError:
+            raise ValueError('wrong passphrase or corrupted session')
+        return data[:-pad].decode('utf-8')
+
+    @classmethod
+    def from_encrypted(cls, encrypted: str, passphrase: str) -> 'StringSession':
+        """Build a :class:`StringSession` from an encrypted string."""
+        return cls(cls.decrypt_session(encrypted, passphrase))

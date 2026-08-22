@@ -97,6 +97,7 @@ nav:
       - API کامل: concepts/full-api.md
       - مقایسه Bot API و MTProto: concepts/botapi-vs-mtproto.md
       - Mastering asyncio: concepts/asyncio.md
+      - "Command Router (چارچوب دستورات)": concepts/router.md
   - مثال‌ها:
       - examples/index.md
       - کاربران: examples/users.md
