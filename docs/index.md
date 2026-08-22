@@ -3,22 +3,52 @@ hide:
   - navigation
 ---
 
+<div dir="ltr" lang="en">
+
+# NSplusthon
+
+**NSplusthon** is an asyncio Python library for the **Soroush Plus** (سروش پلاس / **SPlus**) messenger API. Write **userbots** and **bots** with a Telethon-style client. No API ID or API hash required.
+
+```bash
+pip install nsplusthon
+```
+
+```python
+from nsplusthon import SoroushClient, events
+from nsplusthon.sessions import StringSession
+
+client = SoroushClient(StringSession())
+
+@client.on(events.NewMessage)
+async def handler(event):
+    await event.reply("سلام 👋")
+
+client.start()
+client.run_until_disconnected()
+```
+
+[English overview](en/index.md) · [Compare vs SPlusthon](compare.md) · [Migrate](migration.md) · [Install](installation.md)
+
+</div>
+
+---
+
 # مستندات NSplusthon
 
-**NSplusthon** یک کتابخانه پایتون asyncio است که برای تعامل با API سروش‌پلاس طراحی شده است. این کتابخانه به شما امکان می‌دهد تا با استفاده از حساب کاربری خود، ربات‌ها و اسکریپت‌های مختلفی برای سروش‌پلاس بنویسید.
+**NSplusthon** یک کتابخانه پایتون مبتنی بر **asyncio** برای تعامل با API پیام‌رسان **سروش پلاس** است. می‌توانید هم با **حساب کاربری** و هم با **ربات** کار کنید.
 
 !!! note "یادداشت"
-    این مستندات فقط بخش **UserBot** را پوشش می‌دهد. اگر به دنبال مستندات ربات هستید، به بخش مربوطه مراجعه کنید.
+    این مستندات هم **UserBot** و هم **ربات** را پوشش می‌دهد. کلاینت اصلی `SoroushClient` است. برای ورود ربات از `start(bot_token=...)` استفاده کنید.
 
 ---
 
 ## چرا NSplusthon؟
 
-- **سادگی**: API ساده و خوانا برای تعامل با سروش‌پلاس
-- **کارایی**: پشتیبانی از asyncio برای عملیات همزمان
-- **امکانات گسترده**: ارسال پیام، فایل، عکس و مدیریت مکالمات
-- **پشتیبانی از رویدادها**: سیستم قدرتمند event برای پاسخ خودکار
-- **امنیت**: ذخیره‌سازی امن session و credentialها
+- **سادگی**: API شبیه Telethon برای سروش‌پلاس
+- **کارایی**: AES-IGE حدود ۱۸ برابر سریع‌تر از SPlusthon؛ ایمپورت lazy حدود ۱۵ms
+- **امکانات**: ارسال پیام و فایل، رویدادها، Command Router، rate-limit، session رمزنگاری‌شده
+- **بدون API ID / Hash**: credentials پیش‌فرض داخل کتابخانه است
+- **امنیت**: `StringSession` قابل رمزنگاری با passphrase
 
 ---
 
@@ -42,11 +72,27 @@ hide:
 
     [:octicons-arrow-right-24: نصب کنید](installation.md)
 
+-   :material-translate:{ .lg .middle } __English overview__
+
+    ---
+
+    What NSplusthon is, how it compares to SPlusthon, and a first bot.
+
+    [:octicons-arrow-right-24: Read in English](en/index.md)
+
+-   :material-compare:{ .lg .middle } __مقایسه کتابخانه‌ها__
+
+    ---
+
+    NSplusthon در برابر SPlusthon، spluspy و Telethon.
+
+    [:octicons-arrow-right-24: مقایسه](compare.md)
+
 -   :material-book-open-variant:{ .lg .middle } __مفاهیم پایه__
 
     ---
 
-    توضیحات جامع درباره مفاهیم اساسی مانند Entity، Session و رویدادها.
+    Entity، Session، رویدادها و Command Router.
 
     [:octicons-arrow-right-24: یاد بگیرید](concepts/index.md)
 
@@ -62,7 +108,7 @@ hide:
 
     ---
 
-    مستندات کامل API کتابخانه.
+    متدهای اصلی `SoroushClient` و رویدادها.
 
     [:octicons-arrow-right-24: بررسی کنید](api-reference.md)
 
@@ -82,24 +128,23 @@ hide:
 
 ```python
 from nsplusthon import SoroushClient, events
+from nsplusthon.sessions import StringSession
 
-# ایجاد کلاینت
-client = SoroushClient('session_name')
+client = SoroushClient(StringSession())
 
-# ارسال پیام
-await client.send_message('username', 'سلام!')
-
-# گوش دادن به رویدادها
-@client.on(events.NewMessage(pattern='(?i)سلام'))
+@client.on(events.NewMessage(pattern="(?i)سلام"))
 async def handler(event):
-    await event.reply('سلام! خوش آمدید.')
+    await event.reply("سلام! خوش آمدید.")
+
+client.start()
+client.run_until_disconnected()
 ```
 
 ---
 
 ## پیش‌نیازها
 
-- پایتون 3.7 یا بالاتر
+- پایتون **3.9** یا بالاتر
 - pip (آخرین نسخه)
 - آشنایی مقدماتی با asyncio در پایتون
 
@@ -108,5 +153,7 @@ async def handler(event):
 ## لینک‌های مفید
 
 - [GitHub](https://github.com/Amogrotex/NSplusthon)
+- [PyPI](https://pypi.org/project/nsplusthon/)
 - [سروش‌پلاس](https://web.splus.ir)
-- [مرجع کامل API](https://tl.nsplusthon.dev/)
+- [مرجع API همین سایت](api-reference.md)
+- [مهاجرت از SPlusthon](migration.md)

@@ -1,8 +1,8 @@
-site_name: مستندات NSplusthon
-site_description: مستندات کتابخانه UserBot برای سروش‌پلاس — NSplusthon, an async Python library for the Soroush Plus API
+site_name: NSplusthon
+site_description: NSplusthon — async Python library for the Soroush Plus (سروش پلاس / SPlus) API. Telethon-style client for userbots and bots.
 site_url: https://amogrotex.github.io/NSplusthon/
 repo_url: https://github.com/Amogrotex/NSplusthon
-repo_name: NSplusthon
+repo_name: Amogrotex/NSplusthon
 edit_uri: edit/main/docs/
 
 docs_dir: docs
@@ -84,14 +84,24 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Amogrotex/NSplusthon
-    - icon: fontawesome/brands/telegram
-      link: https://web.splus.ir
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/nsplusthon/
   generator: false
+  alternate:
+    - name: فارسی
+      link: /
+      lang: fa
+    - name: English
+      link: /en/
+      lang: en
 
 nav:
   - خانه: index.md
+  - English: en/index.md
   - شروع سریع: quick-start.md
   - نصب و راه‌اندازی: installation.md
+  - مقایسه: compare.md
+  - مهاجرت از SPlusthon: migration.md
   - مفاهیم پایه:
       - concepts/index.md
       - "Entity (موجودیت)": concepts/entities.md

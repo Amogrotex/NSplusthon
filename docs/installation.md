@@ -24,30 +24,38 @@ python3 -m pip install --upgrade pip
 
 ## نصب کتابخانه
 
-برای نصب NSplusthon، دستور زیر را اجرا کنید:
-
 ```bash
 python3 -m pip install --upgrade nsplusthon
+```
+
+نصب پیشنهادی با رمزنگاری سریع، پروکسی و پردازش رسانه:
+
+```bash
+python3 -m pip install --upgrade "nsplusthon[fast]"
 ```
 
 ---
 
 ## نصب نسخه توسعه‌دهنده
 
-اگر می‌خواهید آخرین تغییرات منتشر نشده را داشته باشید:
+آخرین کد روی شاخه `main`:
 
 ```bash
-python3 -m pip install --upgrade https://github.com/Amogrotex/NSplusthon/archive/v1.zip
+python3 -m pip install --upgrade "git+https://github.com/Amogrotex/NSplusthon.git"
+```
+
+یا یک تگ مشخص (مثال):
+
+```bash
+python3 -m pip install --upgrade "git+https://github.com/Amogrotex/NSplusthon.git@v1.3.0"
 ```
 
 !!! warning "هشدار"
-    نسخه توسعه‌دهنده ممکن است باگ‌هایی داشته باشد و برای استفاده در محیط production توصیه نمی‌شود. اما هنگام گزارش باگ کتابخانه، باید این نسخه را تست کنید.
+    نسخه git ممکن است ناپایدار باشد. برای production از نسخه PyPI استفاده کنید.
 
 ---
 
 ## تأیید نصب
-
-برای اطمینان از نصب صحیح کتابخانه، دستور زیر را اجرا کنید:
 
 ```bash
 python3 -c "import nsplusthon; print(nsplusthon.__version__)"
@@ -55,70 +63,53 @@ python3 -c "import nsplusthon; print(nsplusthon.__version__)"
 
 نسخه کتابخانه باید در خروجی نمایش داده شود.
 
----
-
-## وابستگی‌های اختیاری
-
-### cryptg
-
-اگر cryptg نصب شود، **کتابخانه بسیار سریع‌تر کار می‌کند** زیرا رمزگذاری و رمزگشایی به جای پایتون، در C انجام می‌شود. اگر کد شما با تعداد زیادی رویداد سروکار دارد یا فایل‌های زیادی را دانلود/آپلود می‌کند، سرعت قابل توجهی را مشاهده خواهید کرد.
-
-```bash
-pip install cryptg
-```
-
-### Pillow
-
-اگر pillow نصب شود، تصاویر بزرگ هنگام ارسال عکس به صورت خودکار تغییر اندازه داده می‌شوند تا از خطای "تصویر نامعتبر" جلوگیری شود.
-
-```bash
-pip install pillow
-```
-
-### aiohttp
-
-اگر aiohttp نصب شود، کتابخانه قادر به دانلود فایل‌های رسانه WebDocument خواهد بود.
-
-```bash
-pip install aiohttp
-```
-
-### hachoir
-
-اگر hachoir نصب شود، هنگام ارسال فایل‌ها، اطلاعات متادیتا استخراج می‌شود. سروش‌پلاس از این اطلاعات برای نمایش نام خواننده، هنرمند، عنوان، مدت زمان و اندازه ویدیوها استفاده می‌کند.
-
-```bash
-pip install hachoir
-```
+!!! warning "نام فایل"
+    اسکریپت خود را `nsplusthon.py` نام‌گذاری نکنید؛ با خود پکیج تداخل پیدا می‌کند.
 
 ---
 
-## نصب وابستگی‌های رایج
+## وابستگی‌ها
 
-اگر سیستم شما مبتنی بر apt است، می‌توانید وابستگی‌های رایج را با دستور زیر نصب کنید:
+وابستگی‌های اصلی همراه پکیج نصب می‌شوند: **aiohttp**، **pyaes**، **rsa**.
+
+### اختیاری
+
+| Extra / پکیج | کاربرد |
+| --- | --- |
+| `cryptg` | رمزنگاری C؛ برای ترافیک زیاد یا فایل‌های بزرگ توصیه می‌شود |
+| `python-socks[asyncio]` | پروکسی SOCKS |
+| `Pillow` | تغییر اندازه خودکار تصاویر بزرگ |
+| `hachoir` | متادیتای رسانه (عنوان، مدت، هنرمند) |
+| `isal` | فشرده‌سازی سریع‌تر |
 
 ```bash
-apt update
-apt install clang lib{jpeg-turbo,webp}-dev python{,-dev} zlib-dev
-pip install -U --user setuptools
-pip install -U --user nsplusthon cryptg pillow
+pip install "nsplusthon[cryptg]"
+pip install "nsplusthon[socks]"
+pip install "nsplusthon[fast]"
 ```
 
 ---
 
 ## نصب پشتیبانی پروکسی
 
-اگر نیاز به استفاده از پروکسی برای دسترسی به سروش‌پلاس دارید، باید پکیج python-socks را نصب کنید:
-
 ```bash
-pip install python-socks[asyncio]
+pip install "nsplusthon[socks]"
 ```
-
-سپس پروکسی را به کلاینت پاس دهید:
 
 ```python
-SoroushClient('session_name', api_id, api_hash, proxy=proxy_config)
+from nsplusthon import SoroushClient
+
+proxy = {
+    "proxy_type": "socks5",
+    "addr": "127.0.0.1",
+    "port": 1080,
+    "rdns": True,
+}
+
+client = SoroushClient("session_name", proxy=proxy)
 ```
+
+API ID و Hash لازم نیست مگر خودتان بخواهید مقدار اختصاصی بدهید.
 
 ---
 
@@ -126,14 +117,12 @@ SoroushClient('session_name', api_id, api_hash, proxy=proxy_config)
 
 ### خطای ImportError
 
-اگر خطای `ImportError: cannot import name 'SoroushClient'` دریافت کردید:
+اگر `ImportError: cannot import name 'SoroushClient'` دیدید:
 
 1. مطمئن شوید نام فایل اسکریپت شما `nsplusthon.py` نیست
 2. کتابخانه را دوباره نصب کنید: `pip install --upgrade nsplusthon`
 
 ### خطای نصب وابستگی‌ها
-
-اگر در نصب وابستگی‌ها مشکل دارید:
 
 ```bash
 pip install --upgrade setuptools wheel
@@ -144,4 +133,4 @@ pip install --upgrade nsplusthon
 
 ## مرحله بعدی
 
-پس از نصب موفقیت‌آمیز کتابخانه، به بخش [شروع سریع](quick-start.md) بروید تا یاد بگیرید چگونه اولین کلاینت خود را ایجاد کنید.
+پس از نصب موفقیت‌آمیز، به بخش [شروع سریع](quick-start.md) بروید.

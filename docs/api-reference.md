@@ -377,5 +377,5 @@ string = client.session.save()
 
 ## منابع
 
-- [مرجع کامل API](https://tl.nsplusthon.dev/)
+- [مفاهیم — API کامل](concepts/full-api.md)
 - [GitHub NSplusthon](https://github.com/Amogrotex/NSplusthon)

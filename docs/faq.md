@@ -20,7 +20,7 @@ pip install nsplusthon
 ### چگونه نسخه توسعه‌دهنده را نصب کنم؟
 
 ```bash
-pip install --upgrade https://github.com/Amogrotex/NSplusthon/archive/v1.zip
+pip install --upgrade "git+https://github.com/Amogrotex/NSplusthon.git"
 ```
 
 ### چگونه نصب را تأیید کنم؟
@@ -33,7 +33,7 @@ python3 -c "import nsplusthon; print(nsplusthon.__version__)"
 
 - **cryptg**: افزایش سرعت رمزگذاری
 - **Pillow**: تغییر اندازه خودکار تصاویر
-- **aiohttp**: دانلود فایل‌های WebDocument
+- **aiohttp**: وابستگی اصلی (همراه پکیج نصب می‌شود)
 - **hachoir**: استخراج متادیتا از فایل‌ها
 
 ---
@@ -57,11 +57,7 @@ client.start()
 ```python
 from nsplusthon.sync import SoroushClient
 
-api_id = 12345
-api_hash = '0123456789abcdef0123456789abcdef'
-bot_token = '12345:0123456789abcdef0123456789abcdef'
-
-bot = SoroushClient('bot', api_id, api_hash).start(bot_token=bot_token)
+bot = SoroushClient("bot").start(bot_token="12345:your_bot_token")
 ```
 
 ---
@@ -296,7 +292,8 @@ NSplusthon یک کتابخانه شخص ثالث است. مراقب باشید:
 
 ### چگونه مستندات را مطالعه کنم؟
 
-- [مرجع کامل API](https://tl.nsplusthon.dev/)
+- [مرجع API](api-reference.md)
+- [English overview](en/index.md)
 - [GitHub NSplusthon](https://github.com/Amogrotex/NSplusthon)
 
 ---
@@ -309,7 +306,7 @@ NSplusthon یک کتابخانه پایتون asyncio است که برای تع�
 
 ### NSplusthon از چه نسخه پایتونی پشتیبانی می‌کند؟
 
-پایتون 3.7 یا بالاتر.
+پایتون **3.9** یا بالاتر.
 
 ### آیا NSplusthon رایگان است؟
 
