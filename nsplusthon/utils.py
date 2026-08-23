@@ -52,11 +52,27 @@ mimetypes.add_type('audio/flac', '.flac')
 
 mimetypes.add_type('application/x-tgsticker', '.tgs')
 
+# ── FULL SOROUSH PLUS & TELEGRAM PATTERN SUITE ──
+SPLUSTHON_DOMAINS_RE = re.compile(
+    r'@|(?:https?://)?(?:www\.)?(?:splus\.ir|sapp\.ir|soroush-app\.ir|web\.splus\.ir|telegram\.(?:me|dog)|t\.me)/(?:#@|#|joinchat/|\+|c/|u/)?',
+    re.IGNORECASE
+)
+SPLUSTHON_URI_RE = re.compile(
+    r'(?:soroush|splus|tg)://(?:(join)\?invite=|(?:resolve\?domain=)|user\?id=)?',
+    re.IGNORECASE
+)
+ALL_SOROUSH_LINK_RE = re.compile(
+    r'(?:https?://)?(?:www\.)?(?:splus\.ir|sapp\.ir|soroush-app\.ir|web\.splus\.ir)/(?:joinchat/[a-zA-Z0-9_\-]+|[a-zA-Z0-9_\.\-]+)|'
+    r'(?:soroush|splus)://[a-zA-Z0-9_\-\?=\./]+',
+    re.IGNORECASE
+)
 USERNAME_RE = re.compile(
-    r'@|(?:https?://)?(?:www\.)?(?:telegram\.(?:me|dog)|t\.me)/(@|\+|joinchat/)?'
+    r'@|(?:https?://)?(?:www\.)?(?:splus\.ir|sapp\.ir|soroush-app\.ir|web\.splus\.ir|telegram\.(?:me|dog)|t\.me)/(@|\+|joinchat/)?',
+    re.IGNORECASE
 )
 TG_JOIN_RE = re.compile(
-    r'tg://(join)\?invite='
+    r'(?:soroush|splus|tg)://(?:(join)\?invite=|(?:resolve\?domain=)|user\?id=)?',
+    re.IGNORECASE
 )
 
 VALID_USERNAME_RE = re.compile(
@@ -962,7 +978,8 @@ def parse_username(username):
     m = USERNAME_RE.match(username) or TG_JOIN_RE.match(username)
     if m:
         username = username[m.end():]
-        is_invite = bool(m.group(1))
+        grp = m.group(1) if m.groups() else None
+        is_invite = bool(grp and ('joinchat' in grp or 'join' in grp or '+' in grp))
         if is_invite:
             return username, True
         else:
@@ -1594,3 +1611,102 @@ async def maybe_async(coro):
         warnings.warn('Using async sessions support is an experimental feature')
         result = await result
     return result
+
+
+# ── FULL SOROUSH PLUS DETECTION & RESOLUTION SUITE ──
+
+class SoroushEntityInfo:
+    """Detailed metadata about a detected Soroush Plus identifier."""
+    __slots__ = ('raw', 'type', 'id', 'username', 'invite_hash', 'url', 'uri', 'is_marked')
+
+    def __init__(self, raw, entity_type, entity_id=None, username=None, invite_hash=None, is_marked=False):
+        self.raw = raw
+        self.type = entity_type  # 'user', 'chat', 'channel', 'bot', 'invite', 'username', 'phone', 'unknown'
+        self.id = entity_id
+        self.username = username.strip().lstrip('@') if username else None
+        self.invite_hash = invite_hash
+        self.is_marked = is_marked
+        self.url = f"https://splus.ir/{self.username}" if self.username else (f"https://splus.ir/joinchat/{self.invite_hash}" if self.invite_hash else None)
+        self.uri = f"splus://resolve?domain={self.username}" if self.username else (f"splus://join?invite={self.invite_hash}" if self.invite_hash else (f"splus://user?id={self.id}" if self.id else None))
+
+    def __repr__(self):
+        return f"<SoroushEntityInfo type={self.type!r} id={self.id!r} username={self.username!r} invite_hash={self.invite_hash!r}>"
+
+
+def detect_soroush_entity(target):
+    """
+    Comprehensively detect, parse and classify any Soroush Plus identifier:
+    - Usernames (@user, splus.ir/user, sapp.ir/user, soroush://resolve?domain=user)
+    - Invite links (splus.ir/joinchat/..., splus://join?invite=...)
+    - Numeric IDs (marked channel/group IDs or positive user IDs)
+    - Phone numbers (+989..., 09...)
+    - URIs (soroush://user?id=..., splus://...)
+    """
+    if target is None:
+        return SoroushEntityInfo(None, 'unknown')
+
+    if isinstance(target, int):
+        if target >= 0:
+            return SoroushEntityInfo(target, 'user', entity_id=target)
+        abs_id = -target
+        if abs_id > 1000000000000:
+            return SoroushEntityInfo(target, 'channel', entity_id=abs_id - 1000000000000, is_marked=True)
+        return SoroushEntityInfo(target, 'chat', entity_id=abs_id, is_marked=True)
+
+    s = str(target).strip()
+    if not s:
+        return SoroushEntityInfo(s, 'unknown')
+
+    # Phone detection
+    digits_only = re.sub(r'\D', '', s)
+    if s.startswith(('+98', '09', '989')) and len(digits_only) in (10, 11, 12):
+        return SoroushEntityInfo(s, 'phone', entity_id=digits_only)
+
+    # Marked/negative numeric string
+    if s.startswith('-') and s[1:].isdigit():
+        return detect_soroush_entity(int(s))
+    if s.isdigit():
+        return detect_soroush_entity(int(s))
+
+    # Soroush / splus URI user?id=
+    uri_user_m = re.search(r'(?:soroush|splus)://user\?id=(\d+)', s, re.IGNORECASE)
+    if uri_user_m:
+        uid = int(uri_user_m.group(1))
+        return SoroushEntityInfo(s, 'user', entity_id=uid)
+
+    # Joinchat / invite link
+    if 'joinchat/' in s or 'invite=' in s or s.startswith('+'):
+        parsed, is_invite = parse_username(s)
+        if is_invite:
+            return SoroushEntityInfo(s, 'invite', invite_hash=parsed)
+
+    # Username or standard domain link
+    parsed_uname, is_inv = parse_username(s)
+    if parsed_uname:
+        if is_inv:
+            return SoroushEntityInfo(s, 'invite', invite_hash=parsed_uname)
+        return SoroushEntityInfo(s, 'username', username=parsed_uname)
+
+    return SoroushEntityInfo(s, 'unknown')
+
+
+def is_soroush_link(text):
+    """Return True if text contains a Soroush Plus web link or app URI."""
+    if not text:
+        return False
+    return bool(ALL_SOROUSH_LINK_RE.search(str(text)))
+
+
+def extract_soroush_links(text):
+    """Extract all Soroush Plus web URLs and app URIs from text."""
+    if not text:
+        return []
+    return ALL_SOROUSH_LINK_RE.findall(str(text))
+
+
+def is_soroush_username(text):
+    """Check if the text is a valid standalone Soroush Plus username."""
+    if not text:
+        return False
+    u = str(text).strip().lstrip('@')
+    return bool(VALID_USERNAME_RE.match(u))
