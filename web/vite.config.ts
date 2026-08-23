@@ -1,22 +1,53 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { copyFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { relative, resolve } from "node:path";
 
 const OUT = resolve(__dirname, "../docs");
 
+const CONTENT = resolve(__dirname, "content");
+
+/** Every markdown file becomes a route, mirroring src/lib/content.ts. */
+function contentSlugs(dir = CONTENT): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = resolve(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...contentSlugs(full));
+    } else if (entry.name.endsWith(".md")) {
+      const rel = relative(CONTENT, full).replace(/\\/g, "/").replace(/\.md$/, "");
+      out.push(rel === "index" ? "" : rel.replace(/\/index$/, ""));
+    }
+  }
+  return out;
+}
+
 /**
- * GitHub Pages (legacy, main/docs) serves static files only. A client-routed
- * SPA therefore needs 404.html to mirror index.html so deep links such as
- * /NSplusthon/quick-start/ resolve instead of hitting Pages' own 404.
+ * GitHub Pages (legacy, main/docs) serves static files only.
+ *
+ * 404.html mirrors index.html so unknown paths still boot the router, but
+ * Pages returns them with a 404 status — bad for crawlers and link previews.
+ * So every real route also gets its own index.html and resolves with a 200.
  * .nojekyll stops Pages from stripping files that begin with an underscore.
  */
 function githubPages() {
   return {
     name: "github-pages",
     closeBundle() {
-      copyFileSync(resolve(OUT, "index.html"), resolve(OUT, "404.html"));
+      const shell = resolve(OUT, "index.html");
+      copyFileSync(shell, resolve(OUT, "404.html"));
       writeFileSync(resolve(OUT, ".nojekyll"), "");
+
+      let n = 0;
+      for (const slug of contentSlugs()) {
+        if (!slug) continue;
+        const dir = resolve(OUT, slug);
+        mkdirSync(dir, { recursive: true });
+        copyFileSync(shell, resolve(dir, "index.html"));
+        n++;
+      }
+      // eslint-disable-next-line no-console
+      console.log(`github-pages: wrote ${n} route shells + 404.html`);
     },
   };
 }
