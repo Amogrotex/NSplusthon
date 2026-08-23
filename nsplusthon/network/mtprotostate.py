@@ -13,6 +13,10 @@ from ..tl.functions import InvokeAfterMsgRequest
 from ..tl.core.gzippacked import GzipPacked
 from ..tl.types import BadServerSalt, BadMsgNotification
 
+_STRUCT_QQ = struct.Struct('<qq')
+_STRUCT_Q = struct.Struct('<Q')
+_STRUCT_QII = struct.Struct('<qii')
+
 
 # N is not  specified in https://core.telegram.org/mtproto/security_guidelines#checking-msg-id, but 500 is reasonable
 MAX_RECENT_MSG_IDS = 500
@@ -123,7 +127,7 @@ class MTProtoState:
             body = GzipPacked.gzip_if_smaller(content_related,
                 bytes(InvokeAfterMsgRequest(after_id, _OpaqueRequest(data))))
 
-        buffer.write(struct.pack('<qii', msg_id, seq_no, len(body)))
+        buffer.write(_STRUCT_QII.pack(msg_id, seq_no, len(body)))
         buffer.write(body)
         return msg_id
 
@@ -132,7 +136,7 @@ class MTProtoState:
         Encrypts the given message data using the current authorization key
         following MTProto 2.0 guidelines core.telegram.org/mtproto/description.
         """
-        data = struct.pack('<qq', self.salt, self.id) + data
+        data = _STRUCT_QQ.pack(self.salt, self.id) + data
         padding = os.urandom(-(len(data) + 12) % 16 + 12)
 
         # Being substr(what, offset, length); x = 0 for client
@@ -144,7 +148,7 @@ class MTProtoState:
         msg_key = msg_key_large[8:24]
         aes_key, aes_iv = self._calc_key(self.auth_key.key, msg_key, True)
 
-        key_id = struct.pack('<Q', self.auth_key.key_id)
+        key_id = _STRUCT_Q.pack(self.auth_key.key_id)
         return (key_id + msg_key +
                 AES.encrypt_ige(data + padding, aes_key, aes_iv))
 

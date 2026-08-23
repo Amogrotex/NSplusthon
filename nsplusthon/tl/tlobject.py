@@ -8,18 +8,16 @@ _EPOCH_NAIVE = datetime(*time.gmtime(0)[:6])
 _EPOCH_NAIVE_LOCAL = datetime(*time.localtime(0)[:6])
 _EPOCH = _EPOCH_NAIVE.replace(tzinfo=timezone.utc)
 
+_STRUCT_i = struct.Struct('<i')
+_STRUCT_I = struct.Struct('<I')
+_PAD = (b'', b'\x00', b'\x00\x00', b'\x00\x00\x00')
+
 
 def _datetime_to_timestamp(dt):
-    # If no timezone is specified, it is assumed to be in utc zone
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
-    # We use .total_seconds() method instead of simply dt.timestamp(), 
-    # because on Windows the latter raises OSError on datetimes ~< datetime(1970,1,1)
     secs = int((dt - _EPOCH).total_seconds())
-    # Make sure it's a valid signed 32 bit integer, as used by SoroushPlus.
-    # This does make very large dates wrap around, but it's the best we
-    # can do with SoroushPlus's limitations.
-    return struct.unpack('i', struct.pack('I', secs & 0xffffffff))[0]
+    return _STRUCT_i.unpack(_STRUCT_I.pack(secs & 0xffffffff))[0]
 
 
 def _json_default(value):
@@ -104,38 +102,24 @@ class TLObject:
 
     @staticmethod
     def serialize_bytes(data):
-        """Write bytes by using SoroushPlus guidelines"""
+        """Fast binary serialization using SoroushPlus MTProto guidelines."""
         if not isinstance(data, bytes):
             if isinstance(data, str):
                 data = data.encode('utf-8')
             else:
-                raise TypeError(
-                    'bytes or str expected, not {}'.format(type(data)))
+                raise TypeError(f'bytes or str expected, not {type(data)}')
 
-        r = []
-        if len(data) < 254:
-            padding = (len(data) + 1) % 4
-            if padding != 0:
-                padding = 4 - padding
-
-            r.append(bytes([len(data)]))
-            r.append(data)
-
+        n = len(data)
+        if n < 254:
+            pad = (n + 1) % 4
+            if pad != 0:
+                pad = 4 - pad
+            return bytes([n]) + data + _PAD[pad]
         else:
-            padding = len(data) % 4
-            if padding != 0:
-                padding = 4 - padding
-
-            r.append(bytes([
-                254,
-                len(data) % 256,
-                (len(data) >> 8) % 256,
-                (len(data) >> 16) % 256
-            ]))
-            r.append(data)
-
-        r.append(bytes(padding))
-        return b''.join(r)
+            pad = n % 4
+            if pad != 0:
+                pad = 4 - pad
+            return bytes([254, n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff]) + data + _PAD[pad]
 
     @staticmethod
     def serialize_datetime(dt):

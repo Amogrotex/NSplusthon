@@ -7,6 +7,8 @@ from ..tl import TLRequest
 from ..tl.core.messagecontainer import MessageContainer
 from ..tl.core.tlmessage import TLMessage
 
+_STRUCT_II = struct.Struct("<Ii")
+
 
 class MessagePacker:
     """
@@ -116,8 +118,8 @@ class MessagePacker:
 
         if len(batch) > 1:
             # Inlined code to pack several messages into a container
-            data = struct.pack(
-                '<Ii', MessageContainer.CONSTRUCTOR_ID, len(batch)
+            data = _STRUCT_II.pack(
+                MessageContainer.CONSTRUCTOR_ID, len(batch)
             ) + self._buffer.getvalue()
             self._reset_buffer()
             container_id = self._state.write_data_as_message(

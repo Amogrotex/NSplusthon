@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.4.1
+
+High-throughput serialization and core optimizations.
+
+- Zero-copy tuple padding in `TLObject.serialize_bytes()`.
+- Fast-path for BMP text in `helpers.add_surrogate()`.
+- Pre-compiled struct serialization for `MessageContainer` and `MTProtoState`.
+- Optimized datetime timestamp calculations.
+
 ## 1.4.0
 
 Performance and speedup release.
