@@ -13,6 +13,19 @@ import "./styles/prose.css";
  */
 const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+/**
+ * Pages redirects /foo to /foo/, so the app almost always boots on a path
+ * with a trailing slash. React Router's exact (`end`) matching treats
+ * "/concepts/events/" and "/concepts/events" as different, which left every
+ * sidebar row inactive on the live site. Normalise once, before rendering.
+ */
+{
+  const { pathname, search, hash } = window.location;
+  if (pathname.length > basename.length + 1 && pathname.endsWith("/")) {
+    window.history.replaceState(null, "", pathname.slice(0, -1) + search + hash);
+  }
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={basename}>
