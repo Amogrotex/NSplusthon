@@ -241,9 +241,17 @@
   align-items: start;
 }
 
+/* pages with `hide: navigation` drop the left rail but keep the ToC beside
+   the article — a single column would strand it underneath the content */
 .layout--wide {
+  grid-template-columns: minmax(0, 1fr) var(--toc-w);
+  max-width: 68rem;
+}
+
+/* `hide: navigation` + `hide: toc` (the landing page) really is one column */
+.layout--wide:not(:has(.toc)) {
   grid-template-columns: minmax(0, 1fr);
-  max-width: 60rem;
+  max-width: 62rem;
 }
 
 .rail {
@@ -367,6 +375,10 @@
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+  .layout--wide,
+  .layout--wide:not(:has(.toc)) {
+    grid-template-columns: minmax(0, 1fr);
   }
   .toc { display: none; }
 }
