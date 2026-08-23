@@ -75,3 +75,8 @@ tests/readthedocs/
 .mimocode/
 # mkdocs local build output (the site committed in docs/ is built via scripts/build_docs.sh)
 site/
+
+# docs site (React + Vite in web/)
+web/node_modules/
+web/dist/
+web/.vite/
