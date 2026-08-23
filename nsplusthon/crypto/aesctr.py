@@ -7,7 +7,10 @@ try:
 except ImportError:
     _has_cryptography = False
 
-import pyaes
+try:
+    import pyaes
+except ImportError:
+    pyaes = None
 
 
 class AESModeCTR:
