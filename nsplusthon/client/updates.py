@@ -35,6 +35,26 @@ if typing.TYPE_CHECKING:
 Callback = typing.Callable[[typing.Any], typing.Any]
 
 class UpdateMethods:
+    def add_middleware(self: 'SoroushClient', middleware: typing.Callable):
+        """
+        Register a middleware function in the event dispatch pipeline.
+
+        Middleware signature:
+            async def my_middleware(event, next_handler):
+                # Pre-processing
+                result = await next_handler(event)
+                # Post-processing
+                return result
+        """
+        if not hasattr(self, '_middlewares'):
+            self._middlewares = []
+        self._middlewares.append(middleware)
+
+    def remove_middleware(self: 'SoroushClient', middleware: typing.Callable):
+        """Remove a previously registered middleware function."""
+        if hasattr(self, '_middlewares') and middleware in self._middlewares:
+            self._middlewares.remove(middleware)
+
 
     # region Public methods
 
@@ -687,7 +707,19 @@ class UpdateMethods:
                 continue
 
             try:
-                await callback(event)
+                if hasattr(self, '_middlewares') and self._middlewares:
+                    async def _core_handler(ev):
+                        return await callback(ev)
+                    pipeline = _core_handler
+                    for mw in reversed(self._middlewares):
+                        def _wrap(current_mw, next_step):
+                            async def _step(ev):
+                                return await current_mw(ev, next_step)
+                            return _step
+                        pipeline = _wrap(mw, pipeline)
+                    await pipeline(event)
+                else:
+                    await callback(event)
             except errors.AlreadyInConversationError:
                 name = getattr(callback, '__name__', repr(callback))
                 self._log[__name__].debug(
@@ -728,7 +760,19 @@ class UpdateMethods:
                 continue
 
             try:
-                await callback(event)
+                if hasattr(self, '_middlewares') and self._middlewares:
+                    async def _core_handler(ev):
+                        return await callback(ev)
+                    pipeline = _core_handler
+                    for mw in reversed(self._middlewares):
+                        def _wrap(current_mw, next_step):
+                            async def _step(ev):
+                                return await current_mw(ev, next_step)
+                            return _step
+                        pipeline = _wrap(mw, pipeline)
+                    await pipeline(event)
+                else:
+                    await callback(event)
             except errors.AlreadyInConversationError:
                 name = getattr(callback, '__name__', repr(callback))
                 self._log[__name__].debug(

@@ -58,7 +58,8 @@ class NewMessage(EventBuilder):
     """
     def __init__(self, chats=None, *, blacklist_chats=False, func=None,
                  incoming=None, outgoing=None,
-                 from_users=None, forwards=None, pattern=None):
+                 from_users=None, forwards=None, pattern=None,
+                 media_only=None):
         if incoming and outgoing:
             incoming = outgoing = None  # Same as no filter
         elif incoming is not None and outgoing is None:
@@ -74,6 +75,7 @@ class NewMessage(EventBuilder):
         self.outgoing = outgoing
         self.from_users = from_users
         self.forwards = forwards
+        self.media_only = media_only
         if isinstance(pattern, str):
             self.pattern = re.compile(pattern).match
         elif not pattern or callable(pattern):
@@ -153,6 +155,11 @@ class NewMessage(EventBuilder):
 
         if self.from_users is not None:
             if event.message.sender_id not in self.from_users:
+                return
+
+        if self.media_only is not None:
+            has_media = bool(getattr(event.message, 'media', None))
+            if has_media != bool(self.media_only):
                 return
 
         if self.pattern:
