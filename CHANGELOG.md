@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.7.0
+
+High-Performance Engine, Middleware Pipeline & Declarative Filters Release.
+
+- Middleware Pipeline Architecture: `client.add_middleware()` & `client.remove_middleware()` with onion-style execution.
+- Declarative Event Filters: Added `media_only` filter flag to `events.NewMessage`.
+- Low-Latency MTProto CircuitBreaker Integration: Integrated transport state management to avoid socket hangs on network drops.
+
 ## 1.6.0
 
 Adaptive Gzipping, Circuit Breaker & Full Soroush Detection Release.
