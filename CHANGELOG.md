@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 1.5.0
+
+Major Feature & Architecture Release.
+
+- Interactive Conversation API: `client.conversation(chat)` with `get_response()`, `send_message()`, and auto-timeout.
+- Multi-Account Manager: `ClientPool` for concurrent account management, load balancing, and broadcast round-robin.
+- Fluent Keyboard Builder: `Button.builder()` with `.row()` and `.grid(cols=N)`.
+- Batch Deletion Engine: `client.delete_messages_bulk(chat, ids)` with flood-safe chunking.
+- Admin & Permission Inspector: `client.is_admin(chat, user)` and `client.get_permissions(chat, user)`.
+- Session Exporter: `export_session()` to convert seamlessly between StringSession, SQLiteSession, and MemorySession.
+- Reconnection & Keep-alive: Watchdog ping and exponential backoff recovery.
+
 ## 1.4.1
 
 High-throughput serialization and core optimizations.

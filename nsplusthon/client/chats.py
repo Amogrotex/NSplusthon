@@ -1337,3 +1337,14 @@ class ChatMethods:
             await self._return_exported_sender(sender)
 
     # endregion
+
+
+    async def is_admin(self, entity, user=None):
+        """
+        Check whether the user (or current account if None) is an administrator or creator in the entity.
+        """
+        try:
+            perms = await self.get_permissions(entity, user)
+            return bool(perms and (perms.is_admin or perms.is_creator))
+        except Exception:
+            return False

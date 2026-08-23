@@ -1526,3 +1526,57 @@ class MessageMethods:
     # endregion
 
     # endregion
+
+
+    def conversation(self, entity, *, timeout=60, total_timeout=None,
+                     max_messages=100, exclusive=True,
+                     replies_are_responses=True):
+        """
+        Create a conversation context manager for the given entity.
+
+        Example:
+            async with client.conversation(chat) as conv:
+                await conv.send_message("What's your name?")
+                reply = await conv.get_response()
+        """
+        from ..tl.custom.conversation import Conversation
+        return Conversation(
+            self,
+            entity,
+            timeout=timeout,
+            total_timeout=total_timeout,
+            max_messages=max_messages,
+            exclusive=exclusive,
+            replies_are_responses=replies_are_responses
+        )
+
+    async def delete_messages_bulk(self, entity, message_ids, *, chunk_size=100, delay=0.2, revoke=True):
+        """
+        Delete a large list of message IDs in chunks with flood prevention.
+
+        :param entity: chat or channel where messages should be deleted.
+        :param message_ids: list/iterable of message IDs.
+        :param chunk_size: number of messages per delete request (default 100).
+        :param delay: delay in seconds between chunks (default 0.2s).
+        :param revoke: whether to delete for everyone.
+        :return: total number of deleted messages.
+        """
+        if not message_ids:
+            return 0
+        ids = list(message_ids)
+        total_deleted = 0
+        for i in range(0, len(ids), chunk_size):
+            chunk = ids[i:i + chunk_size]
+            try:
+                res = await self.delete_messages(entity, chunk, revoke=revoke)
+                if isinstance(res, list):
+                    total_deleted += len(res)
+                elif isinstance(res, int):
+                    total_deleted += res
+                else:
+                    total_deleted += len(chunk)
+            except Exception as e:
+                self._log.debug('delete_messages_bulk chunk error: %s', e)
+            if i + chunk_size < len(ids) and delay > 0:
+                await asyncio.sleep(delay)
+        return total_deleted

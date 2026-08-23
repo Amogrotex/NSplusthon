@@ -9,7 +9,16 @@ class Session(ABC):
         """
         Creates a clone of this session file.
         """
-        return to_instance or self.__class__()
+        cloned = to_instance or self.__class__()
+        try:
+            cloned.set_dc(self.dc_id, self.server_address, self.port)
+        except Exception:
+            pass
+        try:
+            cloned.auth_key = self.auth_key
+        except Exception:
+            pass
+        return cloned
 
     @abstractmethod
     def set_dc(self, dc_id, server_address, port):

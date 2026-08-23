@@ -10,6 +10,7 @@ from .version import __version__
 
 __all__ = [
     "SoroushClient",
+    "ClientPool",
     "Button",
     "connection",
     "custom",
@@ -28,6 +29,7 @@ __all__ = [
 # public name -> (module providing it, attribute inside that module)
 _LAZY = {
     "SoroushClient": ("nsplusthon.client.soroushclient", "SoroushClient"),
+    "ClientPool": ("nsplusthon.clientpool", "ClientPool"),
     "Button": ("nsplusthon.tl.custom", "Button"),
     "connection": ("nsplusthon.network.connection", "connection"),
     "custom": ("nsplusthon.custom", None),

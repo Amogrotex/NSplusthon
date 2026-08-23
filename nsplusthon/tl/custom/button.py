@@ -1,8 +1,34 @@
+
+class KeyboardBuilder:
+    """Fluent helper to build keyboard and inline button markups."""
+    def __init__(self, inline=True):
+        self._rows = []
+        self._inline = inline
+
+    def row(self, *buttons):
+        """Add a row of buttons."""
+        self._rows.append(list(buttons))
+        return self
+
+    def grid(self, buttons, cols=2):
+        """Arrange a flat list of buttons into a grid with N columns."""
+        for i in range(0, len(buttons), cols):
+            self._rows.append(list(buttons[i:i + cols]))
+        return self
+
+    def build(self):
+        """Return the finished rows."""
+        return self._rows
+
 from .. import types
 from ... import utils
 
 
 class Button:
+    @classmethod
+    def builder(cls, inline=True):
+        """Return a fluent KeyboardBuilder instance."""
+        return KeyboardBuilder(inline=inline)
     """
     .. note::
 
