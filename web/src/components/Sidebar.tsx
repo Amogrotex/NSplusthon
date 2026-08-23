@@ -16,7 +16,9 @@ export function Sidebar({ open, onNavigate }: { open: boolean; onNavigate: () =>
               <li key={item.slug}>
                 <NavLink
                   to={"/" + item.slug}
-                  end={item.slug === ""}
+                  // exact match only: without this "/concepts" also lights up
+                  // on /concepts/events, marking two rows active at once
+                  end
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     "rail__link" + (isActive ? " rail__link--active" : "")

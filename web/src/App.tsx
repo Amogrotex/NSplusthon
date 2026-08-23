@@ -16,7 +16,7 @@ function Page({ onLayout }: { onLayout: (wide: boolean) => void }) {
   const doc = getDoc(slug);
 
   useEffect(() => {
-    onLayout(Boolean(doc?.hideNav));
+    onLayout(Boolean(doc?.fullBleed));
   }, [doc, onLayout]);
 
   useEffect(() => {
