@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.6.0
+
+Adaptive Gzipping, Circuit Breaker & Full Soroush Detection Release.
+
+- Idea 1 (Adaptive Gzip): Payload compression threshold lowered to 256 bytes with precomputed constructor headers.
+- Idea 7 (Circuit Breaker): `CircuitBreaker` transport resilience to isolate DC connection stalls and recover automatically.
+- Full Soroush Detection: Comprehensive Soroush Plus parser for `splus.ir`, `sapp.ir`, `soroush-app.ir`, `splus://`, and `soroush://` URIs.
+- Entity Auto-Classifier: `detect_soroush_entity()` for parsing users, chats, channels, invite links, and marked IDs.
+
 ## 1.5.0
 
 Major Feature & Architecture Release.
