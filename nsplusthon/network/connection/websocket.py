@@ -306,8 +306,8 @@ class ConnectionWebSocket(ObfuscatedConnection):
 
                     # Reduce send/recv buffer sizes for lower memory usage
                     try:
-                        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)
-                        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+                        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 524288)
+                        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 524288)
                     except OSError as e:
                         _log.debug('Failed to set socket buffer sizes: %s', e)
 

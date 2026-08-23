@@ -260,7 +260,16 @@ class SQLiteSession(MemorySession):
         """Asserts that the connection is open and returns a cursor"""
         if self._conn is None:
             self._conn = sqlite3.connect(self.filename,
-                                         check_same_thread=False)
+                                         check_same_thread=False,
+                                         timeout=15.0)
+            if self.filename != ':memory:':
+                try:
+                    self._conn.execute('pragma journal_mode=WAL')
+                    self._conn.execute('pragma synchronous=NORMAL')
+                    self._conn.execute('pragma mmap_size=67108864')  # 64MB mmap
+                    self._conn.execute('pragma cache_size=-8000')    # 8MB RAM cache
+                except Exception:
+                    pass
         return self._conn.cursor()
 
     def _execute(self, stmt, *values):

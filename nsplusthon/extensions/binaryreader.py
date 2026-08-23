@@ -15,11 +15,21 @@ _log = logging.getLogger(__name__)
 _EPOCH_NAIVE = datetime(*time.gmtime(0)[:6])
 _EPOCH = _EPOCH_NAIVE.replace(tzinfo=timezone.utc)
 
+# Pre-compiled struct formats for high-throughput serialization
+_STRUCT_B = struct.Struct("<B")
+_STRUCT_i = struct.Struct("<i")
+_STRUCT_I = struct.Struct("<I")
+_STRUCT_q = struct.Struct("<q")
+_STRUCT_Q = struct.Struct("<Q")
+_STRUCT_f = struct.Struct("<f")
+_STRUCT_d = struct.Struct("<d")
+
 
 class BinaryReader:
     """
     Small utility class to read binary data.
     """
+    __slots__ = ('stream', 'position', '_last')
 
     def __init__(self, data):
         self.stream = data or b''
@@ -32,35 +42,35 @@ class BinaryReader:
     # https://core.telegram.org/mtproto
     def read_byte(self):
         """Reads a single byte value."""
-        value, = struct.unpack_from("<B", self.stream, self.position)
+        val = self.stream[self.position]
         self.position += 1
-        return value
+        return val
 
     def read_int(self, signed=True):
         """Reads an integer (4 bytes) value."""
-        fmt = '<i' if signed else '<I'
-        value, = struct.unpack_from(fmt, self.stream, self.position)
+        st = _STRUCT_i if signed else _STRUCT_I
+        val = st.unpack_from(self.stream, self.position)[0]
         self.position += 4
-        return value
+        return val
 
     def read_long(self, signed=True):
         """Reads a long integer (8 bytes) value."""
-        fmt = '<q' if signed else '<Q'
-        value, = struct.unpack_from(fmt, self.stream, self.position)
+        st = _STRUCT_q if signed else _STRUCT_Q
+        val = st.unpack_from(self.stream, self.position)[0]
         self.position += 8
-        return value
+        return val
 
     def read_float(self):
         """Reads a real floating point (4 bytes) value."""
-        value, = struct.unpack_from("<f", self.stream, self.position)
+        val = _STRUCT_f.unpack_from(self.stream, self.position)[0]
         self.position += 4
-        return value
+        return val
 
     def read_double(self):
         """Reads a real floating point (8 bytes) value."""
-        value, = struct.unpack_from("<d", self.stream, self.position)
+        val = _STRUCT_d.unpack_from(self.stream, self.position)[0]
         self.position += 8
-        return value
+        return val
 
     def read_large_int(self, bits, signed=True):
         """Reads a n-bits long integer value."""
@@ -97,19 +107,24 @@ class BinaryReader:
         Reads a SoroushPlus-encoded byte array, without the need of
         specifying its length.
         """
-        first_byte = self.read_byte()
+        first_byte = self.stream[self.position]
+        self.position += 1
         if first_byte == 254:
-            length = self.read_byte() | (self.read_byte() << 8) | (
-                self.read_byte() << 16)
+            length = (
+                self.stream[self.position]
+                | (self.stream[self.position + 1] << 8)
+                | (self.stream[self.position + 2] << 16)
+            )
+            self.position += 3
             padding = length % 4
         else:
             length = first_byte
             padding = (length + 1) % 4
 
-        data = self.read(length)
+        data = self.stream[self.position:self.position + length]
+        self.position += length
         if padding > 0:
-            padding = 4 - padding
-            self.read(padding)
+            self.position += (4 - padding)
 
         return data
 
