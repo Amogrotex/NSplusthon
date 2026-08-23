@@ -52,7 +52,6 @@ def _compute_fingerprint(key):
 
 def add_key(pub, *, old):
     """Adds a new public key to be used when encrypting new data is needed"""
-    global _server_keys
     key = rsa.PublicKey.load_pkcs1(pub)
     _server_keys[_compute_fingerprint(key)] = (key, old)
 
@@ -68,7 +67,6 @@ def encrypt(fingerprint, data, *, use_old=False):
     :return:
         the cipher text, or None if no key matching this fingerprint is found.
     """
-    global _server_keys
     key, old = _server_keys.get(fingerprint, [None, None])
     if (not key) or (old and not use_old):
         # Surface the failure: a silent None here makes DC connections fail
