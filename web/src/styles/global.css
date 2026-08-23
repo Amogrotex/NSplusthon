@@ -1,0 +1,154 @@
+/* ==========================================================================
+   NSplusthon docs — design tokens + base layer
+   Black & white, RTL-first, glass surfaces. Motion is transform/opacity only.
+   ========================================================================== */
+
+:root {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fast: 180ms;
+  --blur: 16px;
+  --bar-h: 3rem;
+  --gap: 0.6rem;
+  --chip: 2.15rem;
+  --radius: 16px;
+  --maxw: 1220px;
+  --sidebar-w: 15rem;
+  --toc-w: 13rem;
+
+  --fg: #111111;
+  --bg: #f3f3f3;
+  --muted: #5a5a5a;
+  --line: rgba(17, 17, 17, 0.1);
+  --glass: rgba(255, 255, 255, 0.58);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --ring: rgba(17, 17, 17, 0.35);
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.05);
+  --shadow-lift: 0 14px 40px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.07);
+  --code-bg: rgba(255, 255, 255, 0.62);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --fg: #f4f4f4;
+  --bg: #070707;
+  --muted: #a8a8a8;
+  --line: rgba(255, 255, 255, 0.12);
+  --glass: rgba(18, 18, 18, 0.52);
+  --glass-strong: rgba(22, 22, 22, 0.74);
+  --ring: rgba(255, 255, 255, 0.45);
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 1px 4px rgba(0, 0, 0, 0.45);
+  --shadow-lift: 0 16px 44px rgba(0, 0, 0, 0.72), 0 2px 8px rgba(0, 0, 0, 0.5);
+  --code-bg: rgba(20, 20, 20, 0.66);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--bar-h) * 2 + 2rem);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Vazirmatn, "Segoe UI", Tahoma, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.85;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ambient gradient blobs — cheap atmosphere, no live blur on moving layers */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+body::before {
+  top: -18vmax;
+  inset-inline-start: -12vmax;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.1), transparent 68%);
+  animation: drift 26s var(--ease) infinite alternate;
+}
+
+body::after {
+  bottom: -20vmax;
+  inset-inline-end: -16vmax;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.08), transparent 70%);
+  animation: drift2 32s var(--ease) infinite alternate;
+}
+
+[data-theme="dark"] body::before {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 68%);
+}
+
+[data-theme="dark"] body::after {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent 70%);
+}
+
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(6vmax, 4vmax, 0); }
+}
+
+@keyframes drift2 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-5vmax, -3vmax, 0); }
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(var(--blur)) saturate(155%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(155%);
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 0 0 12px 12px;
+}
+
+.skip-link:focus {
+  inset-inline-start: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  body::before,
+  body::after { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
