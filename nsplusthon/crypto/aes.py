@@ -5,7 +5,10 @@ Supports hardware-accelerated cryptg, libssl (C), and cryptography (C/Rust)
 with pure-Python pyaes fallback.
 """
 import os
-import pyaes
+try:
+    import pyaes
+except ImportError:
+    pyaes = None
 import logging
 from . import libssl
 
