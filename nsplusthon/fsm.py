@@ -1,0 +1,265 @@
+"""
+Declarative Finite State Machine (FSM) engine for NSplusthon.
+
+Provides state management for conversational dialogs, form wizards,
+and multi-step bot flows with both in-memory and persistent SQLite storage.
+
+Usage:
+    from nsplusthon.fsm import StatesGroup, State, MemoryStorage, FSMContext
+
+    class Form(StatesGroup):
+        name = State()
+        age = State()
+        confirm = State()
+
+    storage = MemoryStorage()
+    ctx = storage.get_context(user_id=123, chat_id=456)
+    await ctx.set_state(Form.name)
+    await ctx.update_data(field="value")
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import sqlite3
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, Union, List
+
+
+class State:
+    """Represents a single state in a :class:`StatesGroup`."""
+
+    def __init__(self, name: Optional[str] = None, group_name: Optional[str] = None):
+        self._name = name
+        self._group_name = group_name
+
+    @property
+    def name(self) -> str:
+        if self._group_name and self._name:
+            return f"{self._group_name}:{self._name}"
+        return self._name or "State"
+
+    def __repr__(self) -> str:
+        return f"<State '{self.name}'>"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, State):
+            return self.name == other.name
+        if isinstance(other, str):
+            return self.name == other
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+
+class StatesGroupMeta(type):
+    """Metaclass that automatically names states defined inside a :class:`StatesGroup`."""
+
+    def __new__(mcs, name, bases, namespace):
+        cls = super().__new__(mcs, name, bases, namespace)
+        states = []
+        for attr_name, attr_val in namespace.items():
+            if isinstance(attr_val, State):
+                attr_val._name = attr_name
+                attr_val._group_name = name
+                states.append(attr_val)
+        cls._states = states
+        return cls
+
+
+class StatesGroup(metaclass=StatesGroupMeta):
+    """Base class for defining groups of states."""
+
+    _states: List[State] = []
+
+    @classmethod
+    def all_states(cls) -> List[State]:
+        return list(cls._states)
+
+
+class StateStorage(ABC):
+    """Abstract storage interface for FSM states and data."""
+
+    @abstractmethod
+    async def set_state(self, key: str, state: Optional[Union[State, str]]) -> None:
+        pass
+
+    @abstractmethod
+    async def get_state(self, key: str) -> Optional[str]:
+        pass
+
+    @abstractmethod
+    async def set_data(self, key: str, data: Dict[str, Any]) -> None:
+        pass
+
+    @abstractmethod
+    async def get_data(self, key: str) -> Dict[str, Any]:
+        pass
+
+    @abstractmethod
+    async def update_data(self, key: str, **kwargs: Any) -> Dict[str, Any]:
+        pass
+
+    @abstractmethod
+    async def clear(self, key: str) -> None:
+        pass
+
+    def get_context(self, user_id: int, chat_id: Optional[int] = None) -> FSMContext:
+        key = f"{chat_id or 0}:{user_id}"
+        return FSMContext(storage=self, key=key)
+
+
+class MemoryStorage(StateStorage):
+    """In-memory storage for FSM states and context data."""
+
+    def __init__(self):
+        self._states: Dict[str, Optional[str]] = {}
+        self._data: Dict[str, Dict[str, Any]] = {}
+        self._lock = asyncio.Lock()
+
+    async def set_state(self, key: str, state: Optional[Union[State, str]]) -> None:
+        async with self._lock:
+            if state is None:
+                self._states.pop(key, None)
+            else:
+                self._states[key] = state.name if isinstance(state, State) else str(state)
+
+    async def get_state(self, key: str) -> Optional[str]:
+        async with self._lock:
+            return self._states.get(key)
+
+    async def set_data(self, key: str, data: Dict[str, Any]) -> None:
+        async with self._lock:
+            self._data[key] = dict(data)
+
+    async def get_data(self, key: str) -> Dict[str, Any]:
+        async with self._lock:
+            return dict(self._data.get(key, {}))
+
+    async def update_data(self, key: str, **kwargs: Any) -> Dict[str, Any]:
+        async with self._lock:
+            current = self._data.setdefault(key, {})
+            current.update(kwargs)
+            return dict(current)
+
+    async def clear(self, key: str) -> None:
+        async with self._lock:
+            self._states.pop(key, None)
+            self._data.pop(key, None)
+
+
+class SQLiteStorage(StateStorage):
+    """Thread-safe SQLite persistent storage for FSM states and context data."""
+
+    def __init__(self, db_path: str = "fsm_states.db"):
+        self.db_path = db_path
+        self._init_db()
+
+    def _get_conn(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_db(self) -> None:
+        with self._get_conn() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS fsm_data (
+                    key TEXT PRIMARY KEY,
+                    state TEXT,
+                    data TEXT NOT NULL DEFAULT '{}'
+                )
+            """)
+            conn.commit()
+
+    async def set_state(self, key: str, state: Optional[Union[State, str]]) -> None:
+        st_str = state.name if isinstance(state, State) else (str(state) if state else None)
+        def _run():
+            with self._get_conn() as conn:
+                if st_str is None:
+                    conn.execute("UPDATE fsm_data SET state = NULL WHERE key = ?", (key,))
+                else:
+                    conn.execute("""
+                        INSERT INTO fsm_data (key, state, data) VALUES (?, ?, '{}')
+                        ON CONFLICT(key) DO UPDATE SET state = excluded.state
+                    """, (key, st_str))
+                conn.commit()
+        await asyncio.to_thread(_run)
+
+    async def get_state(self, key: str) -> Optional[str]:
+        def _run():
+            with self._get_conn() as conn:
+                cur = conn.execute("SELECT state FROM fsm_data WHERE key = ?", (key,))
+                row = cur.fetchone()
+                return row["state"] if row else None
+        return await asyncio.to_thread(_run)
+
+    async def set_data(self, key: str, data: Dict[str, Any]) -> None:
+        raw = json.dumps(data)
+        def _run():
+            with self._get_conn() as conn:
+                conn.execute("""
+                    INSERT INTO fsm_data (key, state, data) VALUES (?, NULL, ?)
+                    ON CONFLICT(key) DO UPDATE SET data = excluded.data
+                """, (key, raw))
+                conn.commit()
+        await asyncio.to_thread(_run)
+
+    async def get_data(self, key: str) -> Dict[str, Any]:
+        def _run():
+            with self._get_conn() as conn:
+                cur = conn.execute("SELECT data FROM fsm_data WHERE key = ?", (key,))
+                row = cur.fetchone()
+                if row and row["data"]:
+                    try:
+                        return json.loads(row["data"])
+                    except Exception:
+                        return {}
+                return {}
+        return await asyncio.to_thread(_run)
+
+    async def update_data(self, key: str, **kwargs: Any) -> Dict[str, Any]:
+        current = await self.get_data(key)
+        current.update(kwargs)
+        await self.set_data(key, current)
+        return current
+
+    async def clear(self, key: str) -> None:
+        def _run():
+            with self._get_conn() as conn:
+                conn.execute("DELETE FROM fsm_data WHERE key = ?", (key,))
+                conn.commit()
+        await asyncio.to_thread(_run)
+
+
+class FSMContext:
+    """Context wrapper for reading and mutating state for a specific user/chat key."""
+
+    def __init__(self, storage: StateStorage, key: str):
+        self.storage = storage
+        self.key = key
+
+    async def set_state(self, state: Optional[Union[State, str]]) -> None:
+        await self.storage.set_state(self.key, state)
+
+    async def get_state(self) -> Optional[str]:
+        return await self.storage.get_state(self.key)
+
+    async def set_data(self, data: Dict[str, Any]) -> None:
+        await self.storage.set_data(self.key, data)
+
+    async def get_data(self) -> Dict[str, Any]:
+        return await self.storage.get_data(self.key)
+
+    async def update_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return await self.storage.update_data(self.key, **kwargs)
+
+    async def clear(self) -> None:
+        await self.storage.clear(self.key)
+
+    async def finish(self) -> None:
+        await self.clear()
+
+    def __repr__(self) -> str:
+        return f"<FSMContext key={self.key!r}>"

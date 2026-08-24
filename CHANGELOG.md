@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+## 1.8.0
+
+FSM Framework, Composable Filters, Group Guard Moderation, Paginator & AI Helpers Release.
+
+- **Declarative FSM Engine (`nsplusthon.fsm`)**:
+  - `StatesGroup` and `State` declarative definitions for multi-step dialogs and forms.
+  - Dual storage backends: `MemoryStorage` (in-memory lock-protected) and `SQLiteStorage` (persistent thread-safe database).
+  - `FSMContext` for state mutation (`set_state`, `get_state`, `update_data`, `get_data`, `finish`).
+
+- **Composable Filters Engine (`nsplusthon.filters`)**:
+  - Chainable bitwise filter composition (`&`, `|`, `~`).
+  - Declarative filter types: `TextFilter`, `RegexFilter`, `ChatTypeFilter`, `SenderFilter`, `HasMediaFilter`, `IsReplyFilter`, `StateFilter`, and `IsAdminFilter`.
+
+- **Group Moderation & Anti-Raid Systems (`nsplusthon.moderation`)**:
+  - `GroupGuard` umbrella class encapsulating group security rules.
+  - `AntiFlood` sliding-window rate limiter per user.
+  - `LinkGuard` and invite URL blocker with domain whitelist support.
+  - `PersianBadWordsFilter` bad words detector with zero-width space and leetspeak normalization.
+  - `NightLock` Tehran timezone-aware (UTC+3:30) group schedule validator.
+  - `WarnManager` threshold warning tracker.
+
+- **Interactive Paginator (`nsplusthon.paginator`)**:
+  - `Paginator` helper for generating paginated inline button rows (`◀️ قبلی`, `صفحه 1/5`, `بعدی ▶️`) for large lists and catalogs.
+
+- **AI & Intent Router (`nsplusthon.ai`)**:
+  - `IntentRouter` offline rule-based Persian intent matcher for natural language group commands.
+  - `RedactionGuard` zero-leak security layer scrubbing API keys, tokens, and phone numbers from outputs.
+  - `MultiProviderAI` async client interface with fallback mesh.
+
 ## 1.7.0
 
 High-Performance Engine, Middleware Pipeline & Declarative Filters Release.

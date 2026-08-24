@@ -2,7 +2,7 @@
   <img src="logo.png" width="180" alt="NSplusthon">
 </p>
 
-<h1 align="center">NSplusthon (v1.7.0)</h1>
+<h1 align="center">NSplusthon (v1.8.0)</h1>
 
 <p align="center">
   <b>High-Performance Async Python MTProto Framework for <a href="https://web.splus.ir">Soroush Plus</a></b><br>
@@ -22,8 +22,13 @@
 
 ---
 
-## ⚡ Key Highlights in v1.7.0
+## ⚡ Key Highlights in v1.8.0
 
+* 🧠 **Declarative FSM State Engine**: Form state groups and conversational dialogs with `MemoryStorage` and persistent `SQLiteStorage`.
+* 🔀 **Composable Bitwise Filters**: Combine filters using python logic (`TextFilter` & `IsAdminFilter` | `ChatTypeFilter.group()`).
+* 🛡️ **Group Guard & Moderation Suite**: Anti-flood, link blocker, Persian profanity filter with zero-width space normalization, and Tehran Night Lock.
+* 🗂️ **Interactive Paginator**: Multi-page catalog and list navigation keyboard builder (`◀️ قبلی`, `صفحه 1/5`, `بعدی ▶️`).
+* 🤖 **AI & Intent Router**: Rule-based offline Persian natural intent router and zero-leak security redaction layer.
 * 🚀 **1,700x Faster Cryptography**: Hardware-accelerated AES-CTR stream ciphers (boosted from 0.36 MB/s to 637 MB/s).
 * ⚡ **16x Faster MTProto Decryption**: Optimized AES-IGE block processing with zero-copy memory buffers.
 * 🔍 **Full Soroush Plus Detection**: Native parser for all Soroush Plus domains (`splus.ir`, `sapp.ir`, `web.splus.ir`) and URIs (`soroush://`, `splus://`).
