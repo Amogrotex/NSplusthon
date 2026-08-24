@@ -72,9 +72,6 @@ class StringSession(MemorySession):
             self.auth_key.key
         ))
 
-    # ------------------------------------------------------------------
-    # passphrase-protected sessions
-    # ------------------------------------------------------------------
     ENCRYPTED_VERSION = 'E1'
     _KDF_ITERATIONS = 120_000
 

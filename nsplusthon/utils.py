@@ -52,7 +52,6 @@ mimetypes.add_type('audio/flac', '.flac')
 
 mimetypes.add_type('application/x-tgsticker', '.tgs')
 
-# ── FULL SOROUSH PLUS & TELEGRAM PATTERN SUITE ──
 SPLUSTHON_DOMAINS_RE = re.compile(
     r'@|(?:https?://)?(?:www\.)?(?:splus\.ir|sapp\.ir|soroush-app\.ir|web\.splus\.ir|telegram\.(?:me|dog)|t\.me)/(?:#@|#|joinchat/|\+|c/|u/)?',
     re.IGNORECASE
@@ -150,43 +149,11 @@ def _raise_cast_fail(entity, target):
 
 
 def get_input_peer(entity, allow_self=True, check_hash=True):
-    """
-    Gets the input peer for the given "entity" (user, chat or channel).
-
-    A ``TypeError`` is raised if the given entity isn't a supported type
-    or if ``check_hash is True`` but the entity's ``access_hash is None``
-    *or* the entity contains ``min`` information. In this case, the hash
-    cannot be used for general purposes, and thus is not returned to avoid
-    any issues which can derive from invalid access hashes.
-
-    Note that ``check_hash`` **is ignored** if an input peer is already
-    passed since in that case we assume the user knows what they're doing.
-    This is key to getting entities by explicitly passing ``hash = 0``.
-    """
-    # NOTE: It is important that this method validates the access hashes,
-    #       because it is used when we *require* a valid general-purpose
-    #       access hash. This includes caching, which relies on this method.
-    #       Further, when resolving raw methods, they do e.g.,
-    #           utils.get_input_channel(client.get_input_peer(...))
-    #
-    #       ...which means that the client's method verifies the hashes.
-    #
-    # Excerpt from a conversation with official developers (slightly edited):
-    #     > We send new access_hash for Channel with min flag since layer 102.
-    #     > Previously, we omitted it.
-    #     > That one works just to download the profile picture.
-    #
-    #     < So, min hashes only work for getting files,
-    #     < but the non-min hash is required for any other operation?
-    #
-    #     > Yes.
-    #
-    # More information: https://core.telegram.org/api/min
+    """Gets the input peer for the given user, chat or channel."""
     try:
         if entity.SUBCLASS_OF_ID == 0xc91c90b6:  # crc32(b'InputPeer')
             return entity
     except AttributeError:
-        # e.g. custom.Dialog (can't cyclic import).
         if allow_self and hasattr(entity, 'input_entity'):
             return entity.input_entity
         elif hasattr(entity, 'entity'):
@@ -1612,8 +1579,6 @@ async def maybe_async(coro):
         result = await result
     return result
 
-
-# ── FULL SOROUSH PLUS DETECTION & RESOLUTION SUITE ──
 
 class SoroushEntityInfo:
     """Detailed metadata about a detected Soroush Plus identifier."""
