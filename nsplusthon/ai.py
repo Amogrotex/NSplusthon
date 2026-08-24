@@ -1,28 +1,20 @@
-"""
-AI, Voice & Intent Helper Suite for NSplusthon.
-
-Features:
-- Offline Persian intent-to-command router
-- Zero-leak security redaction layer for API keys, tokens & phone numbers
-- Multi-provider AI helper client interface with fallback logic
-"""
+"""AI client wrapper, offline intent router, and token sanitizer."""
 
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Tuple, Callable, Any
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-# Security redaction patterns for scrubbing outputs before sending
 API_KEY_PATTERNS = [
-    re.compile(r"ghp_[a-zA-Z0-9]{36}"),  # GitHub PAT
-    re.compile(r"sk-[a-zA-Z0-9_]{32,}"),  # OpenAI/DeepSeek key
-    re.compile(r"\b\d{8,12}:[a-zA-Z0-9_-]{30,50}\b"),  # Telegram/Soroush bot token
-    re.compile(r"\b(?:\+?98|0)?9\d{9}\b"),  # Iranian phone numbers
+    re.compile(r"ghp_[a-zA-Z0-9]{36}"),
+    re.compile(r"sk-[a-zA-Z0-9_]{32,}"),
+    re.compile(r"\b\d{8,12}:[a-zA-Z0-9_-]{30,50}\b"),
+    re.compile(r"\b(?:\+?98|0)?9\d{9}\b"),
 ]
 
 
 class RedactionGuard:
-    """Sanitizes text outputs by scrubbing sensitive API keys, bot tokens, and phone numbers."""
+    """Sanitizes text outputs by masking sensitive API tokens and phone numbers."""
 
     @staticmethod
     def sanitize(text: str, replacement: str = "[REDACTED]") -> str:
@@ -36,7 +28,7 @@ class RedactionGuard:
 
 
 class IntentRouter:
-    """Offline rule-based intent router for converting Persian natural text to bot actions."""
+    """Offline rule-based intent router matching text patterns to callbacks."""
 
     def __init__(self):
         self._rules: List[Tuple[re.Pattern, str, Callable]] = []
@@ -56,7 +48,6 @@ class IntentRouter:
         return None
 
     def add_default_persian_rules(self, rules_dict: Dict[str, Callable]) -> None:
-        """Register default common Persian group commands."""
         defaults = [
             (r"(?:قوانین|قانون|مقررات)\s*(?:گروه|گپ)?", "rules"),
             (r"(?:آمار|اطلاعات)\s*(?:گروه|گپ)?", "stats"),
@@ -69,7 +60,7 @@ class IntentRouter:
 
 
 class MultiProviderAI:
-    """Async AI helper interface supporting primary and fallback provider callbacks."""
+    """Helper wrapper for calling multiple AI provider functions with fallbacks."""
 
     def __init__(self, providers: Optional[List[Callable[[str], Any]]] = None):
         self.providers = providers or []
@@ -78,9 +69,8 @@ class MultiProviderAI:
         self.providers.append(provider_fn)
 
     async def generate_response(self, prompt: str) -> str:
-        """Attempt generating response with primary provider, falling back on error."""
         if not self.providers:
-            raise RuntimeError("No AI providers registered in MultiProviderAI.")
+            raise RuntimeError("No AI providers registered.")
 
         last_error = None
         for provider in self.providers:

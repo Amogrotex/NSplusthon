@@ -1,26 +1,15 @@
-"""
-Declarative & Composable Filters Engine for NSplusthon.
-
-Allows combining event filters using python bitwise operators (`&`, `|`, `~`):
-
-Example:
-    from nsplusthon.filters import Text, IsAdmin, ChatType
-
-    filter_rule = Text.startswith("!") & (ChatType.group() | ChatType.supergroup())
-    if await filter_rule(event):
-        ...
-"""
+"""Event filtering abstractions and composable filter functions."""
 
 from __future__ import annotations
 
 import inspect
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Union, Sequence, Pattern, Set
+from typing import Any, Callable, List, Optional, Pattern, Sequence, Set, Union
 
 
 class Filter(ABC):
-    """Base class for all composable filters."""
+    """Base class for composable event filters."""
 
     @abstractmethod
     async def __call__(self, event: Any) -> bool:
@@ -76,7 +65,7 @@ class NotFilter(Filter):
 
 
 class TextFilter(Filter):
-    """Filter messages by text content."""
+    """Filter messages based on text matching."""
 
     def __init__(
         self,
@@ -127,7 +116,7 @@ class TextFilter(Filter):
 
 
 class RegexFilter(Filter):
-    """Filter messages matching a regular expression pattern."""
+    """Filter messages using regular expression patterns."""
 
     def __init__(self, pattern: Union[str, Pattern], flags: int = re.IGNORECASE):
         if isinstance(pattern, str):
@@ -143,7 +132,7 @@ class RegexFilter(Filter):
 
 
 class ChatTypeFilter(Filter):
-    """Filter messages by chat type (private, group, supergroup, channel)."""
+    """Filter events based on chat type (private, group, channel)."""
 
     def __init__(self, types_list: Sequence[str]):
         self.types = {t.lower() for t in types_list}
@@ -171,7 +160,7 @@ class ChatTypeFilter(Filter):
 
 
 class SenderFilter(Filter):
-    """Filter events by sender user IDs or usernames."""
+    """Filter events by sender user ID or username."""
 
     def __init__(self, users: Sequence[Union[int, str]]):
         self.user_ids: Set[int] = set()
@@ -196,7 +185,7 @@ class SenderFilter(Filter):
 
 
 class HasMediaFilter(Filter):
-    """Filter events by presence of media attachments (photo, document, voice, etc.)."""
+    """Filter events by media type attachment."""
 
     def __init__(self, media_type: Optional[str] = None):
         self.media_type = media_type.lower() if media_type else None
@@ -227,14 +216,14 @@ class HasMediaFilter(Filter):
 
 
 class IsReplyFilter(Filter):
-    """Filter messages that are replies to another message."""
+    """Filter messages that reply to another message."""
 
     async def __call__(self, event: Any) -> bool:
         return bool(getattr(event, "is_reply", False) or getattr(event, "reply_to_msg_id", None))
 
 
 class StateFilter(Filter):
-    """Filter events by current FSM state."""
+    """Filter events based on current FSM state."""
 
     def __init__(self, state: Any, fsm_storage: Any):
         self.target_state = state.name if hasattr(state, "name") else str(state) if state else None
@@ -249,7 +238,7 @@ class StateFilter(Filter):
 
 
 class IsAdminFilter(Filter):
-    """Filter checking if sender is an admin/creator in the chat."""
+    """Filter verifying if the sender has admin rights."""
 
     async def __call__(self, event: Any) -> bool:
         client = getattr(event, "client", None)

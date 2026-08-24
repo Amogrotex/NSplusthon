@@ -1,31 +1,16 @@
-"""
-Interactive Paginator & Menu Helpers for NSplusthon.
-
-Builds multi-page inline button keyboards with navigation controls
-(Previous, Page Indicator, Next) for handling long lists or search results.
-
-Usage:
-    from nsplusthon.paginator import Paginator
-    from nsplusthon.tl.custom import Button
-
-    items = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"]
-    paginator = Paginator(items, page_size=3)
-
-    page_items = paginator.get_page(1)  # ["Apple", "Banana", "Cherry"]
-    keyboard = paginator.build_keyboard(current_page=1, callback_prefix="page")
-"""
+"""Pagination helpers for building paginated inline keyboard rows."""
 
 from __future__ import annotations
 
 import math
-from typing import Any, List, Optional, Callable, TypeVar, Generic
+from typing import Any, Callable, Generic, List, Optional, TypeVar
 from .tl.custom.button import Button
 
 T = TypeVar("T")
 
 
 class Paginator(Generic[T]):
-    """Helper class for paginating item collections and generating navigation button rows."""
+    """Helper class for paginating lists and rendering inline keyboard rows."""
 
     def __init__(self, items: List[T], page_size: int = 5):
         if page_size < 1:
@@ -57,23 +42,19 @@ class Paginator(Generic[T]):
         next_label: str = "بعدی ▶️",
         page_format: str = "صفحه {page}/{total}",
     ) -> List[Any]:
-        """Generate a row of buttons [Prev, Page x/y, Next]."""
         current_page = max(1, min(current_page, self.total_pages))
         total = self.total_pages
 
         row = []
 
-        # Previous button
         if current_page > 1:
             row.append(Button.inline(prev_label, data=f"{callback_prefix}:{current_page - 1}"))
         else:
             row.append(Button.inline("❌", data=f"{callback_prefix}:noop"))
 
-        # Indicator button
         indicator = page_format.format(page=current_page, total=total)
         row.append(Button.inline(indicator, data=f"{callback_prefix}:noop"))
 
-        # Next button
         if current_page < total:
             row.append(Button.inline(next_label, data=f"{callback_prefix}:{current_page + 1}"))
         else:
@@ -89,10 +70,6 @@ class Paginator(Generic[T]):
         prev_label: str = "◀️ قبلی",
         next_label: str = "بعدی ▶️",
     ) -> List[List[Any]]:
-        """
-        Build a complete inline keyboard containing item buttons
-        followed by a navigation row.
-        """
         keyboard = []
         page_items = self.get_page(current_page)
 
