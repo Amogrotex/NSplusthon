@@ -93,20 +93,43 @@ else:
             ('rounds', ctypes.c_uint),
         ]
 
-    def decrypt_ige(cipher_text, key, iv):
+    # Reuse AES_set_*_key across packets that share an auth key. The
+    # schedule is ~240 bytes and building it on every MTProto frame is
+    # wasted work — a client typically uses one or two keys for hours.
+    _KEY_CACHE_LIMIT = 8
+    _encrypt_key_cache = {}
+    _decrypt_key_cache = {}
+
+    def _cached_aes_key(key, encrypt):
+        cache = _encrypt_key_cache if encrypt else _decrypt_key_cache
+        # ``bytes(key)`` is cheap for the 32-byte AES-256 keys we use.
+        cache_key = bytes(key)
+        scheduled = cache.get(cache_key)
+        if scheduled is not None:
+            return scheduled
         aes_key = AES_KEY()
-        key_len = ctypes.c_int(8 * len(key))
+        key_buf = (ctypes.c_ubyte * len(cache_key)).from_buffer_copy(cache_key)
+        key_len = ctypes.c_int(8 * len(cache_key))
+        if encrypt:
+            _libssl.AES_set_encrypt_key(key_buf, key_len, ctypes.byref(aes_key))
+        else:
+            _libssl.AES_set_decrypt_key(key_buf, key_len, ctypes.byref(aes_key))
+        if len(cache) >= _KEY_CACHE_LIMIT:
+            cache.clear()
+        cache[cache_key] = aes_key
+        return aes_key
+
+    def decrypt_ige(cipher_text, key, iv):
+        aes_key = _cached_aes_key(key, encrypt=False)
         # from_buffer_copy does a single C-level memcpy instead of copying
         # the data one byte at a time; this is what makes the ctypes path
         # competitive with the compiled cryptg extension.
-        key = (ctypes.c_ubyte * len(key)).from_buffer_copy(key)
         iv = (ctypes.c_ubyte * len(iv)).from_buffer_copy(iv)
 
         in_len = ctypes.c_size_t(len(cipher_text))
         in_ptr = (ctypes.c_ubyte * len(cipher_text)).from_buffer_copy(cipher_text)
         out_ptr = (ctypes.c_ubyte * len(cipher_text))()
 
-        _libssl.AES_set_decrypt_key(key, key_len, ctypes.byref(aes_key))
         _libssl.AES_ige_encrypt(
             ctypes.byref(in_ptr),
             ctypes.byref(out_ptr),
@@ -119,19 +142,13 @@ else:
         return bytes(out_ptr)
 
     def encrypt_ige(plain_text, key, iv):
-        aes_key = AES_KEY()
-        key_len = ctypes.c_int(8 * len(key))
-        # from_buffer_copy does a single C-level memcpy instead of copying
-        # the data one byte at a time; this is what makes the ctypes path
-        # competitive with the compiled cryptg extension.
-        key = (ctypes.c_ubyte * len(key)).from_buffer_copy(key)
+        aes_key = _cached_aes_key(key, encrypt=True)
         iv = (ctypes.c_ubyte * len(iv)).from_buffer_copy(iv)
 
         in_len = ctypes.c_size_t(len(plain_text))
         in_ptr = (ctypes.c_ubyte * len(plain_text)).from_buffer_copy(plain_text)
         out_ptr = (ctypes.c_ubyte * len(plain_text))()
 
-        _libssl.AES_set_encrypt_key(key, key_len, ctypes.byref(aes_key))
         _libssl.AES_ige_encrypt(
             ctypes.byref(in_ptr),
             ctypes.byref(out_ptr),

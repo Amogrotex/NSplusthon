@@ -87,12 +87,12 @@ class UpdateMethods:
         Runs the event loop until the library is disconnected.
 
         It also notifies SoroushPlus that we want to receive updates
-        as described in https://core.telegram.org/api/updates.
+        as described in the Soroush Plus / MTProto updates protocol.
         If an unexpected error occurs during update handling,
         the client will disconnect and said error will be raised.
 
         Manual disconnections can be made by calling `disconnect()
-        <nsplusthon.client.telegrambaseclient.SoroushPlusBaseClient.disconnect>`
+        <nsplusthon.client.plusbaseclient.SoroushPlusBaseClient.disconnect>`
         or sending a ``KeyboardInterrupt`` (e.g. by pressing ``Ctrl+C`` on
         the console window running the script).
 

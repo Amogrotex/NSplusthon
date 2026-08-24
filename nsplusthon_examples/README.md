@@ -11,12 +11,10 @@ have it installed yet (this is the most portable way to install it).
 NSplusthon ships with default credentials, so **most examples run without
 any API ID or hash** — just start them and log in with your phone number.
 
-A couple of examples (`assistant.py`, `gui.py`) still accept explicit
-credentials through standard input, or through these environment variables:
+Optional environment variables:
 
-* `TG_API_ID` — your API ID (optional, NSplusthon default is used otherwise)
-* `TG_API_HASH` — your API hash (optional, NSplusthon default is used otherwise)
-* `TG_SESSION` — the name of the `*.session` file to use
+* `SPLUS_SESSION` — the name of the `*.session` file to use (`TG_SESSION` still accepted)
+* `SPLUS_BOT_TOKEN` — bot token for `assistant.py`
 
 ## Running Examples
 
@@ -80,7 +78,7 @@ The content of the plugins or how they work is not really relevant. You can
 disable them by moving them elsewhere or deleting the file entirely. The point
 is to learn how you can build fancy things with your own code and NSplusthon.
 
-### [`interactive_telegram_client.py`]
+### [`interactive_soroush_client.py`]
 
 * Usable as: **user**.
 * Difficulty: **medium**.

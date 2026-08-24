@@ -33,10 +33,8 @@ def get_env(name, message, cast=str):
             time.sleep(1)
 
 
-# Session name, API ID and hash to use; loaded from environmental variables
-SESSION = os.environ.get('TG_SESSION', 'gui')
-API_ID = get_env('TG_API_ID', 'Enter your API ID: ', int)
-API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ')
+# Session name; loaded from environmental variables
+SESSION = os.environ.get('SPLUS_SESSION', os.environ.get('TG_SESSION', 'gui'))
 
 
 def sanitize_str(string):
@@ -342,7 +340,7 @@ class App(tkinter.Tk):
 
 
 async def main(interval=0.05):
-    client = SoroushClient(SESSION, API_ID, API_HASH)
+    client = SoroushClient(SESSION)
     try:
         await client.connect()
     except Exception as e:

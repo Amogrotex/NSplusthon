@@ -242,11 +242,31 @@ class IsAdminFilter(Filter):
 
     async def __call__(self, event: Any) -> bool:
         client = getattr(event, "client", None)
-        if client and hasattr(client, "is_admin"):
-            try:
-                chat = await event.get_input_chat()
-                user = await event.get_input_sender()
-                return await client.is_admin(chat, user)
-            except Exception:
-                pass
-        return False
+        if not client or not hasattr(client, "is_admin"):
+            return False
+        try:
+            chat = await event.get_input_chat()
+            user = await event.get_input_sender()
+            return bool(await client.is_admin(chat, user))
+        except (AttributeError, TypeError, ValueError):
+            return False
+
+
+__all__ = [
+    "Filter",
+    "AndFilter",
+    "OrFilter",
+    "NotFilter",
+    "TextFilter",
+    "RegexFilter",
+    "ChatTypeFilter",
+    "SenderFilter",
+    "HasMediaFilter",
+    "IsReplyFilter",
+    "StateFilter",
+    "IsAdminFilter",
+]
+
+
+def __dir__():
+    return list(__all__)
