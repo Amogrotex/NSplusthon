@@ -161,23 +161,29 @@ class UpdateMethods:
         Attach a `nsplusthon.router.Router` (command framework) to this
         client. Incoming messages are parsed as commands and dispatched
         to the registered handlers.
-
-        Example
-            .. code-block:: python
-
-                from nsplusthon.router import Router
-
-                router = Router()
-
-                @router.command('start')
-                async def cmd_start(event):
-                    await event.reply('Hi!')
-
-                client = SoroushClient(...)
-                client.use_router(router)
         """
         router.attach(self)
         return self
+
+    def set_fsm_storage(self: 'SoroushClient', storage) -> 'SoroushClient':
+        """Set the FSM storage backend for this client."""
+        self._fsm_storage = storage
+        return self
+
+    def fsm_context(self: 'SoroushClient', user_id: int, chat_id: typing.Optional[int] = None):
+        """Get the FSMContext instance for a specific user and chat."""
+        if not hasattr(self, '_fsm_storage') or self._fsm_storage is None:
+            from ..fsm import MemoryStorage
+            self._fsm_storage = MemoryStorage()
+        return self._fsm_storage.get_context(user_id=user_id, chat_id=chat_id)
+
+    def enable_group_guard(self: 'SoroushClient', guard=None, **kwargs):
+        """Enable GroupGuard moderation for this client."""
+        if guard is None:
+            from ..moderation import GroupGuard
+            guard = GroupGuard(**kwargs)
+        self._group_guard = guard
+        return guard
 
     def add_event_handler(
             self: 'SoroushClient',

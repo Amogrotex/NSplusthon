@@ -59,7 +59,7 @@ class NewMessage(EventBuilder):
     def __init__(self, chats=None, *, blacklist_chats=False, func=None,
                  incoming=None, outgoing=None,
                  from_users=None, forwards=None, pattern=None,
-                 media_only=None):
+                 media_only=None, filter=None, filters=None):
         if incoming and outgoing:
             incoming = outgoing = None  # Same as no filter
         elif incoming is not None and outgoing is None:
@@ -70,7 +70,7 @@ class NewMessage(EventBuilder):
             raise ValueError("Don't create an event handler if you "
                              "don't want neither incoming nor outgoing!")
 
-        super().__init__(chats, blacklist_chats=blacklist_chats, func=func)
+        super().__init__(chats, blacklist_chats=blacklist_chats, func=func, filter=filter, filters=filters)
         self.incoming = incoming
         self.outgoing = outgoing
         self.from_users = from_users
