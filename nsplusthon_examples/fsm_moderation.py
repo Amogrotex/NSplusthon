@@ -1,35 +1,28 @@
-"""
-NSplusthon v1.8.0 Example: Interactive FSM Form, Composable Filters, Group Guard, and Paginator Menu.
-"""
+"""Example usage of FSM, filters, group moderation, and pagination in NSplusthon."""
 
-import asyncio
 from nsplusthon import SoroushClient, Button, events
 from nsplusthon.fsm import StatesGroup, State, MemoryStorage
-from nsplusthon.filters import TextFilter, ChatTypeFilter
 from nsplusthon.moderation import GroupGuard
 from nsplusthon.paginator import Paginator
 
 
-# 1. Define FSM State Group
 class UserRegistration(StatesGroup):
     waiting_for_fullname = State()
     waiting_for_city = State()
 
 
-# 2. Instantiate Storage and Group Guard
 fsm_storage = MemoryStorage()
 group_guard = GroupGuard(
     max_flood_messages=5,
-    allowed_domains=["splus.ir/botzone"],
+    allowed_domains=["splus.ir"],
     max_mentions=3,
 )
 
-client = SoroushClient("fsm_demo_session")
+client = SoroushClient("demo_session")
 
 
 @client.on(events.NewMessage)
 async def moderation_middleware(event):
-    """Filter all incoming group messages using GroupGuard."""
     if event.is_group:
         check = group_guard.inspect_message(
             chat_id=event.chat_id,
@@ -37,17 +30,14 @@ async def moderation_middleware(event):
             text=event.text,
         )
         if check["is_violation"]:
-            reason = check["reason"]
             await event.delete()
-            await event.respond(f"⚠️ پیام شما به دلیل {reason} حذف شد. (اخطار {check['warn_count']}/3)")
 
 
 @client.on(events.NewMessage(pattern=r"/register"))
 async def start_registration(event):
-    """Start interactive multi-step FSM registration."""
     ctx = fsm_storage.get_context(user_id=event.sender_id, chat_id=event.chat_id)
     await ctx.set_state(UserRegistration.waiting_for_fullname)
-    await event.reply("📝 به ثبت نام خوش آمدید! لطفاً نام و نام خانوادگی خود را بفرستید:")
+    await event.reply("Please enter your full name:")
 
 
 @client.on(events.NewMessage)
@@ -58,31 +48,29 @@ async def process_registration(event):
     if current_state == UserRegistration.waiting_for_fullname.name:
         await ctx.update_data(fullname=event.text)
         await ctx.set_state(UserRegistration.waiting_for_city)
-        await event.reply("✅ نام ثبت شد. حالا نام شهر خود را بفرستید:")
+        await event.reply("Please enter your city:")
 
     elif current_state == UserRegistration.waiting_for_city.name:
         data = await ctx.get_data()
-        fullname = data.get("fullname", "ناشناس")
+        fullname = data.get("fullname", "")
         city = event.text
 
         await ctx.finish()
-        await event.reply(f"🎉 ثبت‌نام تکمیل شد!\n👤 نام: {fullname}\n🏙️ شهر: {city}")
+        await event.reply(f"Registration complete for {fullname} from {city}.")
 
 
 @client.on(events.NewMessage(pattern=r"/catalog"))
 async def show_catalog(event):
-    """Display paginated catalog menu."""
-    items = [f"📦 محصول شماره {i}" for i in range(1, 21)]
+    items = [f"Item {i}" for i in range(1, 21)]
     paginator = Paginator(items, page_size=4)
 
     def item_btn(item, idx):
-        return Button.inline(f"{item}", data=f"item:{idx}")
+        return Button.inline(item, data=f"item:{idx}")
 
     keyboard = paginator.build_keyboard(current_page=1, item_button_factory=item_btn)
-    await event.reply("🗂 کاتالوگ محصولات:", buttons=keyboard)
+    await event.reply("Catalog:", buttons=keyboard)
 
 
 if __name__ == "__main__":
-    print("NSplusthon v1.8.0 FSM & Moderation Bot starting...")
     client.start()
     client.run_until_disconnected()

@@ -1,22 +1,4 @@
-"""
-Declarative Finite State Machine (FSM) engine for NSplusthon.
-
-Provides state management for conversational dialogs, form wizards,
-and multi-step bot flows with both in-memory and persistent SQLite storage.
-
-Usage:
-    from nsplusthon.fsm import StatesGroup, State, MemoryStorage, FSMContext
-
-    class Form(StatesGroup):
-        name = State()
-        age = State()
-        confirm = State()
-
-    storage = MemoryStorage()
-    ctx = storage.get_context(user_id=123, chat_id=456)
-    await ctx.set_state(Form.name)
-    await ctx.update_data(field="value")
-"""
+"""Finite State Machine (FSM) implementation for conversation states."""
 
 from __future__ import annotations
 
@@ -24,11 +6,11 @@ import asyncio
 import json
 import sqlite3
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, List, Optional, Union
 
 
 class State:
-    """Represents a single state in a :class:`StatesGroup`."""
+    """Represents a single state inside a state group."""
 
     def __init__(self, name: Optional[str] = None, group_name: Optional[str] = None):
         self._name = name
@@ -55,7 +37,7 @@ class State:
 
 
 class StatesGroupMeta(type):
-    """Metaclass that automatically names states defined inside a :class:`StatesGroup`."""
+    """Metaclass that automatically names state attributes in state groups."""
 
     def __new__(mcs, name, bases, namespace):
         cls = super().__new__(mcs, name, bases, namespace)
@@ -80,7 +62,7 @@ class StatesGroup(metaclass=StatesGroupMeta):
 
 
 class StateStorage(ABC):
-    """Abstract storage interface for FSM states and data."""
+    """Abstract base class for FSM state storage backends."""
 
     @abstractmethod
     async def set_state(self, key: str, state: Optional[Union[State, str]]) -> None:
@@ -112,7 +94,7 @@ class StateStorage(ABC):
 
 
 class MemoryStorage(StateStorage):
-    """In-memory storage for FSM states and context data."""
+    """In-memory storage backend for FSM states and context data."""
 
     def __init__(self):
         self._states: Dict[str, Optional[str]] = {}
@@ -151,7 +133,7 @@ class MemoryStorage(StateStorage):
 
 
 class SQLiteStorage(StateStorage):
-    """Thread-safe SQLite persistent storage for FSM states and context data."""
+    """SQLite-backed persistent storage for FSM states and context data."""
 
     def __init__(self, db_path: str = "fsm_states.db"):
         self.db_path = db_path
@@ -234,7 +216,7 @@ class SQLiteStorage(StateStorage):
 
 
 class FSMContext:
-    """Context wrapper for reading and mutating state for a specific user/chat key."""
+    """Helper context wrapper for managing state and data for a user or chat."""
 
     def __init__(self, storage: StateStorage, key: str):
         self.storage = storage
