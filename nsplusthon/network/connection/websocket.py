@@ -234,7 +234,17 @@ class ConnectionWebSocket(ObfuscatedConnection):
             'Origin': 'https://web.splus.ir'
         }
 
-        connect_timeout = aiohttp.ClientTimeout(total=timeout) if timeout else None
+        # Handshake-only timeout. A session-level ``total=`` is inherited
+        # by every later ``receive()`` and will kill a live WebSocket
+        # ``timeout`` seconds after the session was created.
+        connect_timeout = None
+        if timeout:
+            connect_timeout = aiohttp.ClientTimeout(
+                total=None,
+                connect=timeout,
+                sock_connect=timeout,
+                sock_read=None,
+            )
         # Reuse cached session if connection parameters haven't changed
         session_key = (self._ip, self._port, self._proxy, getattr(self, '_local_addr', None))
 

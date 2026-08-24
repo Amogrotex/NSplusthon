@@ -384,6 +384,14 @@ class MTProtoSender:
 
         # Start with a clean state (and thus session ID) to avoid old msgs
         self._state.reset()
+        # A leftover ping id would make the next keepalive treat this
+        # fresh socket as dead and immediately reconnect again.
+        self._ping = None
+
+        # Give the server a moment to finish tearing the old WebSocket
+        # down. Re-opening instantly is how Soroush ends up closing the
+        # new socket while we are still reading.
+        await asyncio.sleep(max(self._delay, 0.4))
 
         retries = self._retries if self._auto_reconnect else 0
 
@@ -445,6 +453,43 @@ class MTProtoSender:
         # Fallback clear: in case the loop exited without hitting the
         # success branch above (e.g. all retries exhausted).
         self._reconnecting = False
+
+    def _prepare_resend_after_reconnect(self):
+        """Filter pending RPCs after ``_state.reset()``.
+
+        * ``PingRequest`` is keepalive-only and meaningless on a new
+          session. Replaying it also leaves ``_ping`` set so the next
+          keepalive immediately reconnects again.
+        * ``GetUsersRequest`` returns HTTP/RPC 500 on Soroush before
+          login and the server then closes the WebSocket. Replaying a
+          pile of them is what produced the ``pending=19 GetUsersRequest``
+          reconnect storm.
+
+        Other requests (e.g. ``SignInRequest``) are re-enqueued so the
+        login flow can finish on the new connection.
+        """
+        self._ping = None
+        to_resend = []
+        dropped = 0
+        for state in self._pending_state.values():
+            req = state.request
+            name = type(req).__name__ if req is not None else ''
+            if name in ('PingRequest', 'GetUsersRequest'):
+                dropped += 1
+                if not state.future.done():
+                    if name == 'GetUsersRequest':
+                        state.future.set_exception(
+                            ConnectionError('dropped GetUsersRequest on reconnect')
+                        )
+                    else:
+                        state.future.cancel()
+                continue
+            to_resend.append(state)
+        self._pending_state.clear()
+        if dropped:
+            self._log.info(
+                'Dropped %d stale Ping/GetUsers request(s) on reconnect', dropped)
+        return to_resend
 
     def _start_reconnect(self, error):
         """Starts a reconnection in the background."""
@@ -545,11 +590,20 @@ class MTProtoSender:
             except asyncio.CancelledError:
                 raise  # bypass except Exception
             except (IOError, asyncio.IncompleteReadError) as e:
+                pending = len(self._pending_state)
                 self._log.warning('Connection closed while receiving data: %s (pending=%d)',
-                                  e, len(self._pending_state))
-                for msg_id, st in self._pending_state.items():
-                    self._log.warning('  pending msg %d: %s', msg_id,
-                                      st.request.__class__.__name__ if st.request else '?')
+                                  e, pending)
+                if pending:
+                    names = [
+                        st.request.__class__.__name__ if st.request else '?'
+                        for st in self._pending_state.values()
+                    ]
+                    counts = collections.Counter(names)
+                    summary = ', '.join(
+                        f'{n}×{c}' if c > 1 else n
+                        for n, c in counts.most_common(8)
+                    )
+                    self._log.warning('  pending: %s', summary)
                 self._start_reconnect(e)
                 return
             except InvalidBufferError as e:

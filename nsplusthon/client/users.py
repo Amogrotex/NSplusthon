@@ -33,7 +33,8 @@ class UserMethods:
     async def __call__(self: 'SoroushClient', request, ordered=False, flood_sleep_threshold=None):
         return await self._call(self._sender, request, ordered=ordered)
 
-    async def _call(self: 'SoroushClient', sender, request, ordered=False, flood_sleep_threshold=None):
+    async def _call(self: 'SoroushClient', sender, request, ordered=False, flood_sleep_threshold=None,
+                   request_retries=None):
         if self._loop is not None and self._loop != helpers.get_running_loop():
             raise RuntimeError('The asyncio event loop must not change after connection (see the FAQ for details)')
         # if the loop is None it will fail with a connection error later on
@@ -70,8 +71,9 @@ class UserMethods:
         request_index = 0
         last_error = None
         self._last_request = time.time()
+        retries = self._request_retries if request_retries is None else request_retries
 
-        for attempt in retry_range(self._request_retries):
+        for attempt in retry_range(retries):
             try:
                 future = sender.send(request, ordered=ordered)
                 if isinstance(future, list):
@@ -173,15 +175,24 @@ class UserMethods:
             return self._mb_entity_cache.get(self._mb_entity_cache.self_id)._as_input_peer()
 
         try:
-            me = (await self(
-                functions.users.GetUsersRequest([types.InputUserSelf()])))[0]
+            # One attempt only: on Soroush, GetUsersRequest returns 500
+            # (and closes the WebSocket) when the auth key is not yet
+            # registered. Retrying it is what flooded pending=GetUsersRequest
+            # and forced a reconnect loop during phone sign-in.
+            me = (await self._call(
+                self._sender,
+                functions.users.GetUsersRequest([types.InputUserSelf()]),
+                request_retries=1,
+            ))[0]
 
             if not self._mb_entity_cache.self_id:
                 self._mb_entity_cache.set_self_user(me.id, me.bot, me.access_hash)
 
             return utils.get_input_peer(me, allow_self=False) if input_peer else me
-        except errors.UnauthorizedError as e:
-            _log.debug('Not authorized to get self user: %s', e)
+        except (errors.UnauthorizedError, errors.AuthKeyError,
+                errors.ServerError, errors.RpcCallFailError,
+                ConnectionError, OSError, asyncio.CancelledError) as e:
+            _log.debug('Not able to get self user: %s', e)
             return None
 
     @property
