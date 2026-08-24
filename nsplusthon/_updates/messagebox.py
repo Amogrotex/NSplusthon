@@ -27,24 +27,12 @@ from ..helpers import get_running_loop
 
 _log = logging.getLogger(__name__)
 
-# SoroushPlus sends `seq` equal to `0` when "it doesn't matter", so we use that value too.
 NO_SEQ = 0
 
-# See https://core.telegram.org/method/updates.getChannelDifference.
 BOT_CHANNEL_DIFF_LIMIT = 100000
 USER_CHANNEL_DIFF_LIMIT = 100
 
-# > It may be useful to wait up to 0.5 seconds
-# Reduced to 100ms for faster gap resolution in Soroush
 POSSIBLE_GAP_TIMEOUT = 0.1
-
-# After how long without updates the client will "timeout".
-#
-# When this timeout occurs, the client will attempt to fetch updates by itself, ignoring all the
-# updates that arrive in the meantime. After all updates are fetched when this happens, the
-# client will resume normal operation, and the timeout will reset.
-#
-# Documentation recommends 15 minutes without updates (https://core.telegram.org/api/updates).
 NO_UPDATES_TIMEOUT = 15 * 60
 
 # object() but with a tag to make it easier to debug
@@ -141,22 +129,13 @@ class State:
         return f'State(pts={self.pts}, deadline={self.deadline})'
 
 
-# > ### Recovering gaps
-# > […] Manually obtaining updates is also required in the following situations:
-# > • Loss of sync: a gap was found in `seq` / `pts` / `qts` (as described above).
-# >   It may be useful to wait up to 0.5 seconds in this situation and abort the sync in case a new update
-# >   arrives, that fills the gap.
-#
-# This is really easy to trigger by spamming messages in a channel (with as little as 3 members works), because
-# the updates produced by the RPC request take a while to arrive (whereas the read update comes faster alone).
 class PossibleGap:
     __slots__ = ('deadline', 'updates')
 
     def __init__(
         self,
         deadline: float,
-        # Pending updates (those with a larger PTS, producing the gap which may later be filled).
-        updates: list  # of updates
+        updates: list
     ):
         self.deadline = deadline
         self.updates = updates
@@ -165,9 +144,6 @@ class PossibleGap:
         return f'PossibleGap(deadline={self.deadline}, update_count={len(self.updates)})'
 
 
-# Represents a "message box" (event `pts` for a specific entry).
-#
-# See https://core.telegram.org/api/updates#message-related-event-sequences.
 class MessageBox:
     __slots__ = ('_log', 'map', 'date', 'seq', 'next_deadline', 'possible_gaps', 'getting_diff_for')
 

@@ -1,7 +1,5 @@
 import asyncio
-
 import pytest
-
 from nsplusthon.router import Router, parse_command
 
 
@@ -16,9 +14,6 @@ class FakeEvent:
         self.replies.append(text)
 
 
-# ----------------------------------------------------------------------
-# parse_command
-# ----------------------------------------------------------------------
 def test_parse_basic():
     m = parse_command('/start')
     assert m.name == 'start' and m.args == [] and m.kwargs == {}
@@ -46,7 +41,6 @@ def test_parse_prefixes():
 def test_parse_bot_mention():
     assert parse_command('/start@MyBot', bot_name='MyBot').name == 'start'
     assert parse_command('/start@OtherBot', bot_name='MyBot') is None
-    # no bot_name set: suffix is simply stripped
     assert parse_command('/start@Anyone').name == 'start'
 
 
@@ -57,9 +51,6 @@ def test_parse_non_command():
     assert parse_command('/1start') is None
 
 
-# ----------------------------------------------------------------------
-# dispatch
-# ----------------------------------------------------------------------
 def test_dispatch_runs_command():
     router = Router()
     seen = {}
@@ -172,7 +163,6 @@ def test_middleware_order_and_shortcircuit():
     asyncio.run(router.dispatch(FakeEvent('/go')))
     assert order == ['mw1-in', 'mw2-in', 'cmd', 'mw1-out']
 
-    # short-circuit: mw2 swallows the command
     order.clear()
 
     @router.middleware
@@ -180,8 +170,6 @@ def test_middleware_order_and_shortcircuit():
         order.append('mw3-blocks')
 
     asyncio.run(router.dispatch(FakeEvent('/go')))
-    # onion model: outer middlewares' "out" phase still runs,
-    # but the command itself is never reached
     assert order == ['mw1-in', 'mw2-in', 'mw3-blocks', 'mw1-out']
     assert 'cmd' not in order
 
@@ -219,7 +207,6 @@ def test_attach_registers_handler():
     assert len(client.handlers) == 1
     event_builder, handler = client.handlers[0]
     assert event_builder.__name__ == 'NewMessage'
-    # end-to-end through the registered handler
     event = FakeEvent('/start')
     asyncio.run(handler(event))
     assert event.replies == ['hi']
@@ -242,33 +229,22 @@ def test_client_use_router():
 
 
 def test_client_constructible_with_no_event_loop():
-    """
-    Regression (Python 3.9): asyncio.Lock()/Queue()/Event() bind to the
-    *current* event loop at construction time on 3.9. After a preceding
-    asyncio.run() has cleared the loop policy, building a SoroushClient at
-    the top level used to raise RuntimeError. All loop-bound primitives
-    are now created lazily on first use (always inside a running loop).
-    """
     from nsplusthon import SoroushClient
     from nsplusthon.sessions import StringSession
 
     async def _noop():
         pass
 
-    # Clears the main thread's event loop policy on Python 3.9
     asyncio.run(_noop())
 
-    # Must not raise, even with no running/current event loop
     client = SoroushClient(StringSession())
 
     async def run():
-        # Force the lazy primitives to be created inside a running loop
         assert client._get_borrow_sender_lock() is not None
         queue = client._updates_queue
         assert client._sender._get_connect_lock() is not None
         assert client._sender._send_queue._get_ready() is not None
 
-        # The sender writes to the same queue the client reads from
         client._sender._updates_queue.put_nowait('ping')
         assert queue.get_nowait() == 'ping'
 
@@ -293,6 +269,5 @@ def test_rate_limit_integration():
     asyncio.run(run())
     elapsed = time.monotonic() - t0
     assert len(hits) == 3
-    # the third tick had to wait for the window to free up
     assert elapsed >= 0.25
     assert hits[0] < hits[1] < hits[2]

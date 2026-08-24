@@ -21,9 +21,6 @@ class _EntityType(enum.Enum):
 _log = logging.getLogger(__name__)
 
 
-# region Multiple utilities
-
-
 def generate_random_long(signed=True):
     """Generates a random long integer (8 bytes), which is optionally signed"""
     return int.from_bytes(os.urandom(8), signed=signed, byteorder='little')
@@ -263,10 +260,6 @@ def _entity_type(entity):
     # 'Empty' in name or not found, we don't care, not a valid entity.
     raise TypeError('{} does not have any entity type'.format(entity))
 
-# endregion
-
-# region Cryptographic related utils
-
 
 def generate_key_data_from_nonce(server_nonce, new_nonce):
     """Generates the key data corresponding to the given nonce"""
@@ -279,11 +272,6 @@ def generate_key_data_from_nonce(server_nonce, new_nonce):
     key = hash1 + hash2[:12]
     iv = hash2[12:20] + hash3 + new_nonce[:4]
     return key, iv
-
-
-# endregion
-
-# region Custom Classes
 
 
 class TotalList(list):

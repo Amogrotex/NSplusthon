@@ -1,35 +1,5 @@
-"""
-A small command framework for Soroush Plus bots.
+"""Command router and middleware dispatcher for Soroush Plus bots."""
 
-Instead of hand-rolling ``if text == "/start"`` chains, declare
-commands on a :class:`Router`, attach the router to your client, and
-get parsing, ``@BotName`` handling, arguments, per-user state,
-middleware and an automatic ``/help`` for free:
-
-    from nsplusthon import SoroushClient, events
-    from nsplusthon.sessions import StringSession
-    from nsplusthon.router import Router
-
-    router = Router()
-
-    @router.command('start', description='Say hello')
-    async def cmd_start(event, args, kwargs):
-        name = kwargs.get('name', 'friend')
-        await event.reply(f'Hi {name}!')
-
-    @router.command('setname', usage='<name>')
-    async def cmd_setname(event, args):
-        router.user_state(event.sender_id)['name'] = args[0]
-        await event.reply('ok')
-
-    client = SoroushClient(StringSession())
-    router.attach(client)
-    client.start()
-
-The router is transport-agnostic: it only reads ``event.raw_text`` and
-calls ``event.reply(...)``, so it works with user accounts, bot
-accounts, and the sync client alike.
-"""
 from __future__ import annotations
 
 import asyncio
@@ -44,13 +14,11 @@ _log = logging.getLogger(__name__)
 
 __all__ = ['Router', 'Command', 'CommandMessage', 'RouterContext', 'parse_command']
 
-# names a command callback may ask for, mapped by parameter name
 _KNOWN_PARAMS = ('event', 'args', 'kwargs', 'ctx', 'router', 'command')
 
 
 @dataclass
 class CommandMessage:
-    """The result of parsing a command out of a message."""
     name: str
     args: List[str] = field(default_factory=list)
     kwargs: Dict[str, Union[str, bool]] = field(default_factory=dict)
@@ -58,7 +26,6 @@ class CommandMessage:
 
 @dataclass
 class Command:
-    """A registered command."""
     name: str
     callback: Callable
     description: str = ''
@@ -66,17 +33,6 @@ class Command:
 
 
 class RouterContext:
-    """
-    Context object passed to callbacks/middleware that ask for ``ctx``.
-
-    Attributes:
-        event: the incoming message event
-        args: positional arguments (``list[str]``)
-        kwargs: ``--key value`` / ``--key=value`` arguments
-        command: the matched :class:`Command`
-        router: the owning :class:`Router`
-    """
-
     def __init__(self, event, args, kwargs, command: Command, router: 'Router'):
         self.event = event
         self.args = args
@@ -92,17 +48,6 @@ def parse_command(
         text: Optional[str],
         prefixes: str = '/!',
         bot_name: Optional[str] = None) -> Optional[CommandMessage]:
-    """
-    Parse a command message. Returns ``None`` when ``text`` is not a
-    command (or is addressed to a different bot).
-
-    Args:
-        text: the message text (raw text).
-        prefixes: accepted command prefixes, e.g. ``"/!"``.
-        bot_name: optional bot username. When set, ``/start@OtherBot``
-            is ignored and ``/start@MyBot`` is accepted. When unset,
-            the ``@name`` suffix is simply stripped.
-    """
     if not text or not isinstance(text, str):
         return None
     text = text.lstrip()
@@ -119,7 +64,7 @@ def parse_command(
         mentioned = head[at + 1:]
         if bot_name is not None:
             if not mentioned or mentioned.lower() != bot_name.lower():
-                return None  # addressed to someone else
+                return None
         head = head[:at]
 
     name = head.lower()
@@ -155,18 +100,6 @@ def parse_command(
 
 
 class Router:
-    """
-    A command router: registers commands and dispatches incoming
-    messages to them.
-
-    Args:
-        prefixes (`str`, optional):
-            Accepted command prefixes (default ``"/!"``).
-
-        name (`str`, optional):
-            This bot's username. Enables ``@BotName`` filtering.
-    """
-
     def __init__(self, *, prefixes: str = '/!', name: Optional[str] = None):
         if not prefixes:
             raise ValueError('prefixes must not be empty')
@@ -178,21 +111,10 @@ class Router:
         self._chat_state: Dict[int, Dict] = {}
         self.name = name
         self.unknown_command: Optional[Callable] = None
-        # register the default /help unless the user already did
         self._commands['help'] = Command(
             'help', self._help_callback, 'Show this help', '')
 
-    # ------------------------------------------------------------------
-    # registration
-    # ------------------------------------------------------------------
     def command(self, name: str, *, description: str = '', usage: str = ''):
-        """
-        Decorator that registers a command.
-
-        The callback may be sync or async and may request any of the
-        parameters ``event``, ``args``, ``kwargs``, ``ctx``, ``router``
-        and ``command`` (by name).
-        """
         clean = name.strip().lstrip(self._prefix_str).lower()
         if not clean or not clean.isidentifier():
             raise ValueError(f'invalid command name: {name!r}')
@@ -211,29 +133,16 @@ class Router:
         self._commands[command.name.lower()] = command
 
     def resolve(self, name: str) -> Optional[Command]:
-        """Return the :class:`Command` registered under ``name`` (or None)."""
         return self._commands.get(name.lower())
 
     def commands(self) -> List[Command]:
         return sorted(self._commands.values(), key=lambda c: c.name)
 
-    # ------------------------------------------------------------------
-    # middleware & rate limiting
-    # ------------------------------------------------------------------
     def middleware(self, fn: Callable) -> Callable:
-        """
-        Register a middleware: ``async def mw(event, next_handler)``.
-        Call ``await next_handler()`` to continue the chain; return
-        without calling it to short-circuit (e.g. reject the command).
-        """
         self._middlewares.append(fn)
         return fn
 
     def use_rate_limit(self, max_calls: int = 40, period: float = 60.0) -> 'Router':
-        """
-        Add a per-chat sliding-window rate limiter (default 40/minute).
-        Sleeps inside the event loop instead of raising FloodWait.
-        """
         limiter = RateLimiter(max_calls=max_calls, period=period)
 
         async def _guard(event, next_handler):
@@ -244,22 +153,13 @@ class Router:
         self._middlewares.append(_guard)
         return self
 
-    # ------------------------------------------------------------------
-    # state
-    # ------------------------------------------------------------------
     def user_state(self, user_id: int) -> Dict:
-        """Mutable per-user state dict (in-memory)."""
         return self._user_state.setdefault(int(user_id), {})
 
     def chat_state(self, chat_id: int) -> Dict:
-        """Mutable per-chat state dict (in-memory)."""
         return self._chat_state.setdefault(int(chat_id), {})
 
-    # ------------------------------------------------------------------
-    # dispatch
-    # ------------------------------------------------------------------
     async def dispatch(self, event) -> None:
-        """Parse ``event.raw_text`` and run the matching command (if any)."""
         parsed = parse_command(
             getattr(event, 'raw_text', None), self._prefixes, self.name)
         if parsed is None:
@@ -313,7 +213,6 @@ class Router:
                         f"unsupported parameter {p.name!r} (use one of "
                         f"{', '.join(_KNOWN_PARAMS)} or *args)")
         if var_positional is not None:
-            # named params first (in signature order), then *args
             pos_values = [bound[p.name] for p in params
                           if p.kind in (inspect.Parameter.POSITIONAL_ONLY,
                                         inspect.Parameter.POSITIONAL_OR_KEYWORD)]
@@ -340,16 +239,8 @@ class Router:
             if inspect.isawaitable(result):
                 await result
 
-    # ------------------------------------------------------------------
-    # client wiring
-    # ------------------------------------------------------------------
     def attach(self, client) -> 'Router':
-        """
-        Register the router on ``client`` (any object with
-        ``client.on`` + the events module, e.g. ``SoroushClient``).
-        Returns the router for chaining.
-        """
-        from . import events  # local import keeps the router lightweight
+        from . import events
 
         @client.on(events.NewMessage)
         async def _router_handler(event) -> None:
