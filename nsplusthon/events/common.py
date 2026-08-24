@@ -65,11 +65,11 @@ class EventBuilder(abc.ABC):
                 async def handler(event):
                     pass  # code here
     """
-    def __init__(self, chats=None, *, blacklist_chats=False, func=None):
+    def __init__(self, chats=None, *, blacklist_chats=False, func=None, filter=None, filters=None):
         self.chats = chats
         self.blacklist_chats = bool(blacklist_chats)
         self.resolved = False
-        self.func = func
+        self.func = filter or filters or func
         self._resolve_lock = None
 
     @classmethod

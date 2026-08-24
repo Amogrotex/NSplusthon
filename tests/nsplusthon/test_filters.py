@@ -1,4 +1,5 @@
 import pytest
+from nsplusthon.events import NewMessage
 from nsplusthon.filters import TextFilter, RegexFilter, ChatTypeFilter, IsReplyFilter
 
 
@@ -32,3 +33,9 @@ async def test_combined_filters():
     assert await combined(MockEvent(is_group=True, is_reply=True)) is True
     assert await combined(MockEvent(is_group=True, is_reply=False)) is False
     assert await combined(MockEvent(is_group=False, is_reply=True)) is False
+
+
+@pytest.mark.asyncio
+async def test_new_message_with_filter():
+    builder = NewMessage(filter=TextFilter(startswith="hello"))
+    assert builder.func is not None
