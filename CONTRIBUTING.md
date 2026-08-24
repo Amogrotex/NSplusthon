@@ -29,6 +29,8 @@ Source markdown lives next to the built GitHub Pages site in `docs/`. Edit the `
 - Persian is the default site language (RTL).
 - Keep an English summary on `docs/en/index.md` and on the homepage so search engines can index the project.
 - Do not link to `tl.nsplusthon.dev` or Telegram (`t.me`, `my.telegram.org`) unless the text is explicitly about Telegram/Telethon.
+- Keep `NOTICE` / `THIRD_PARTY.md` if you touch license headers.
+- Tests must not import optional extras (`Pillow`, `cryptg`, `isal`) at module import time — use `pytest.importorskip`.
 
 ## What helps the package grow
 

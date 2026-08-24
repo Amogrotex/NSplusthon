@@ -24,9 +24,7 @@ def get_env(name, message, cast=str):
 
 
 # Define some variables so the code reads easier
-session = os.environ.get('TG_SESSION', 'printer')
-api_id = get_env('TG_API_ID', 'Enter your API ID: ', int)
-api_hash = get_env('TG_API_HASH', 'Enter your API hash: ')
+session = os.environ.get('SPLUS_SESSION', os.environ.get('TG_SESSION', 'printer'))
 proxy = None  # https://github.com/romis2012/python-socks
 
 
@@ -36,7 +34,7 @@ async def handler(update):
 
 
 # Use the client in a `with` block. It calls `start/disconnect` automatically.
-with SoroushClient(session, api_id, api_hash, proxy=proxy) as client:
+with SoroushClient(session, proxy=proxy) as client:
     # Register the update handler so that it gets called
     client.add_event_handler(handler)
 

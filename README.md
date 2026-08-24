@@ -14,6 +14,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License"></a>
 </p>
 
+Maintained fork of [SPlusthon](https://github.com/shayanheidari01/SPlusthon), itself derived from [Telethon](https://github.com/LonamiWebs/Telethon). See [NOTICE](NOTICE) and [THIRD_PARTY.md](THIRD_PARTY.md).
+
 ---
 
 ## Features
@@ -21,7 +23,7 @@
 - **User Accounts & Bots**: Support for user login and official bot tokens.
 - **FSM State Storage**: Finite State Machine with `MemoryStorage` and persistent `SQLiteStorage`.
 - **Composable Filters**: Combine event filters using Python logic (`&`, `|`, `~`).
-- **Group Moderation**: Built-in flood protection, link checking, profanity filtering, and night-lock scheduling.
+- **Group Moderation**: Built-in flood protection, link checking, profanity filtering, and optional night-lock.
 - **Interactive Conversations**: Linear multi-step conversation handler (`async with client.conversation(chat)`).
 - **Client Pool**: Manage multiple accounts with client pooling and message broadcasting.
 - **Inline Keyboards & Paginator**: Clean keyboard builder and paginated inline menu layout.
@@ -35,10 +37,16 @@
 pip install -U nsplusthon
 ```
 
-Optional dependencies for fast crypto acceleration and proxy support:
+Optional dependencies for **fast crypto** (cryptg) and proxy support:
 
 ```bash
 pip install -U "nsplusthon[fast]"
+```
+
+PyPI may lag the git tag (Trusted Publishing — see [PUBLISHING.md](PUBLISHING.md)). Latest:
+
+```bash
+pip install -U "nsplusthon[fast] @ git+https://github.com/Amogrotex/NSplusthon.git"
 ```
 
 ---
@@ -67,6 +75,8 @@ client.run_until_disconnected()
 client.start(bot_token="12345:abcdef")
 ```
 
+No API ID or API hash is required.
+
 ---
 
 ## Usage Examples
@@ -92,7 +102,12 @@ await ctx.update_data(name="Ali")
 ```python
 from nsplusthon.moderation import GroupGuard
 
-guard = GroupGuard(max_flood_messages=5, max_mentions=3)
+guard = GroupGuard(
+    max_flood_messages=5,
+    max_mentions=3,
+    allowed_domains=["splus.ir"],
+    exempt_user_ids={bot_id},
+)
 result = guard.inspect_message(chat_id=event.chat_id, user_id=event.sender_id, text=event.text)
 
 if result["is_violation"]:
@@ -113,4 +128,4 @@ keyboard = paginator.build_keyboard(current_page=1, callback_prefix="page")
 
 ## License
 
-GPL-3.0 License. Maintained by [AmoGrotex](https://github.com/Amogrotex).
+[GPL-3.0](LICENSE). Copyright (C) 2026 AmoGrotex. Upstream Telethon is MIT — see [NOTICE](NOTICE).

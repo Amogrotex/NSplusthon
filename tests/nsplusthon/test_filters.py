@@ -39,3 +39,11 @@ async def test_combined_filters():
 async def test_new_message_with_filter():
     builder = NewMessage(filter=TextFilter(startswith="hello"))
     assert builder.func is not None
+
+
+def test_filters_public_api():
+    import nsplusthon.filters as filters
+
+    assert "TextFilter" in filters.__all__
+    assert "ABC" not in filters.__all__
+    assert "TextFilter" in dir(filters)

@@ -45,13 +45,11 @@ PASSWORD_FORM = '''
 </form>
 '''
 
-# Session name, API ID and hash to use; loaded from environmental variables
-SESSION = os.environ.get('TG_SESSION', 'quart')
-API_ID = int(get_env('TG_API_ID', 'Enter your API ID: '))
-API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ')
+# Session name; loaded from environmental variables
+SESSION = os.environ.get('SPLUS_SESSION', os.environ.get('TG_SESSION', 'quart'))
 
 # NSplusthon client
-client = SoroushClient(SESSION, API_ID, API_HASH)
+client = SoroushClient(SESSION)
 client.parse_mode = 'html'  # <- Render things nicely
 phone = None
 

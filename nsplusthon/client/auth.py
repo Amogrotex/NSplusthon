@@ -54,8 +54,8 @@ class AuthMethods:
                 The argument may be a coroutine.
 
             bot_token (`str`):
-                Bot Token obtained from @BotFather inside the Soroush Plus
-                app to log in as a bot. Cannot be specified with ``phone``
+                Bot token obtained from BotFather *inside the Soroush Plus
+                app* to log in as a bot. Cannot be specified with ``phone``
                 (only one of either allowed).
 
             force_sms (`bool`, optional):
@@ -85,7 +85,7 @@ class AuthMethods:
         Example
             .. code-block:: python
 
-                client = SoroushClient('anon', api_id, api_hash)
+                client = SoroushClient('anon')
 
                 # Starting as a bot account
                 await client.start(bot_token=bot_token)
@@ -319,7 +319,7 @@ class AuthMethods:
 
             bot_token (`str`):
                 Used to sign in as a bot. Not all requests will be available.
-                This should be the hash the `@BotFather <https://t.me/BotFather>`_
+                This should be the token BotFather inside Soroush Plus
                 gave you.
 
             phone_code_hash (`str`, optional):

@@ -48,14 +48,14 @@ def get_env(name, message, cast=str):
             time.sleep(1)
 
 
-API_ID = get_env('TG_API_ID', 'Enter your API ID: ', int)
-API_HASH = get_env('TG_API_HASH', 'Enter your API hash: ')
-TOKEN = get_env('TG_TOKEN', 'Enter the bot token: ')
+TOKEN = get_env('SPLUS_BOT_TOKEN', 'Enter the bot token: ')
+if not TOKEN:
+    TOKEN = get_env('TG_TOKEN', 'Enter the bot token: ')
 NAME = TOKEN.split(':')[0]
 
 
 async def main():
-    bot = SoroushClient(NAME, API_ID, API_HASH)
+    bot = SoroushClient(NAME)
 
     await bot.start(bot_token=TOKEN)
 
