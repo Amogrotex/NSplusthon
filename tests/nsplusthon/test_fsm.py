@@ -50,6 +50,20 @@ async def test_fsm_sqlite_storage(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_fsm_sqlite_update_data_keeps_state(tmp_path):
+    class Quiz(StatesGroup):
+        q1 = State()
+
+    storage = SQLiteStorage(str(tmp_path / "fsm_atomic.db"))
+    ctx = storage.get_context(user_id=1, chat_id=2)
+    await ctx.set_state(Quiz.q1)
+    await ctx.update_data(score=1)
+    await ctx.update_data(score=2, extra="x")
+    assert await ctx.get_state() == "Quiz:q1"
+    assert await ctx.get_data() == {"score": 2, "extra": "x"}
+
+
+@pytest.mark.asyncio
 async def test_client_fsm_integration():
     client = SoroushClient(StringSession())
     ctx = client.fsm_context(user_id=55, chat_id=77)

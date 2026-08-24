@@ -86,9 +86,7 @@ async def handler(event):
 
 
 client = SoroushClient(
-    os.environ.get('TG_SESSION', 'replier'),
-    get_env('TG_API_ID', 'Enter your API ID: ', int),
-    get_env('TG_API_HASH', 'Enter your API hash: '),
+    os.environ.get('SPLUS_SESSION', os.environ.get('TG_SESSION', 'replier')),
     proxy=None
 )
 

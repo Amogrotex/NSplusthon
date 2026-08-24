@@ -34,9 +34,7 @@ def get_env(name, message, cast=str):
 
 
 bot = SoroushClient(
-    os.environ.get('TG_SESSION', 'payment'),
-    get_env('TG_API_ID', 'Enter your API ID: ', int),
-    get_env('TG_API_HASH', 'Enter your API hash: '),
+    os.environ.get('SPLUS_SESSION', os.environ.get('TG_SESSION', 'payment')),
     proxy=None
 )
 

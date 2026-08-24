@@ -73,11 +73,21 @@ class RateLimiter:
         while window and window[0] <= cutoff:
             window.popleft()
 
+    def _drop_empty(self, key: Hashable, window: deque) -> None:
+        if not window:
+            self._windows.pop(key, None)
+
     def pending(self, key: Hashable) -> float:
         """Seconds you would have to wait right now for ``key``."""
         now = time.monotonic()
         window = self._windows.get(key)
-        if not window or len(window) < self.max_calls:
+        if not window:
+            return 0.0
+        self._prune(window, now)
+        if not window:
+            self._windows.pop(key, None)
+            return 0.0
+        if len(window) < self.max_calls:
             return 0.0
         return max(0.0, window[0] + self.period - now)
 
@@ -98,6 +108,9 @@ class RateLimiter:
                 now = time.monotonic()
                 window = self._windows[key]
                 self._prune(window, now)
+                if not window:
+                    self._windows.pop(key, None)
+                    window = self._windows[key]
                 if len(window) < self.max_calls:
                     window.append(now)
                     granted = True

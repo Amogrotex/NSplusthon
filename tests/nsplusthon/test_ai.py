@@ -8,6 +8,14 @@ def test_redaction_guard():
     assert "[REDACTED]" in cleaned
 
 
+def test_redacts_github_and_pypi_tokens():
+    cleaned = RedactionGuard.sanitize(
+        "tok ghp_abcdefghijklmnopqrstuvwxyz0123456789 and pypi-abcdefghijklmnopqrstuv"
+    )
+    assert "ghp_" not in cleaned
+    assert "pypi-" not in cleaned
+
+
 def test_intent_router():
     router = IntentRouter()
     matched_intents = []

@@ -99,35 +99,40 @@ class MemoryStorage(StateStorage):
     def __init__(self):
         self._states: Dict[str, Optional[str]] = {}
         self._data: Dict[str, Dict[str, Any]] = {}
-        self._lock = asyncio.Lock()
+        self._lock = None  # created lazily — py3.9 binds Lock to the current loop
+
+    def _get_lock(self) -> asyncio.Lock:
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     async def set_state(self, key: str, state: Optional[Union[State, str]]) -> None:
-        async with self._lock:
+        async with self._get_lock():
             if state is None:
                 self._states.pop(key, None)
             else:
                 self._states[key] = state.name if isinstance(state, State) else str(state)
 
     async def get_state(self, key: str) -> Optional[str]:
-        async with self._lock:
+        async with self._get_lock():
             return self._states.get(key)
 
     async def set_data(self, key: str, data: Dict[str, Any]) -> None:
-        async with self._lock:
+        async with self._get_lock():
             self._data[key] = dict(data)
 
     async def get_data(self, key: str) -> Dict[str, Any]:
-        async with self._lock:
+        async with self._get_lock():
             return dict(self._data.get(key, {}))
 
     async def update_data(self, key: str, **kwargs: Any) -> Dict[str, Any]:
-        async with self._lock:
+        async with self._get_lock():
             current = self._data.setdefault(key, {})
             current.update(kwargs)
             return dict(current)
 
     async def clear(self, key: str) -> None:
-        async with self._lock:
+        async with self._get_lock():
             self._states.pop(key, None)
             self._data.pop(key, None)
 
@@ -140,33 +145,51 @@ class SQLiteStorage(StateStorage):
         self._init_db()
 
     def _get_conn(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=15.0)
         conn.row_factory = sqlite3.Row
+        try:
+            conn.execute("pragma journal_mode=WAL")
+            conn.execute("pragma synchronous=NORMAL")
+        except sqlite3.Error:
+            pass
         return conn
 
     def _init_db(self) -> None:
         with self._get_conn() as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS fsm_data (
                     key TEXT PRIMARY KEY,
                     state TEXT,
                     data TEXT NOT NULL DEFAULT '{}'
                 )
-            """)
+                """
+            )
             conn.commit()
 
+    @staticmethod
+    def _state_to_str(state: Optional[Union[State, str]]) -> Optional[str]:
+        if state is None:
+            return None
+        return state.name if isinstance(state, State) else str(state)
+
     async def set_state(self, key: str, state: Optional[Union[State, str]]) -> None:
-        st_str = state.name if isinstance(state, State) else (str(state) if state else None)
+        st_str = self._state_to_str(state)
+
         def _run():
             with self._get_conn() as conn:
                 if st_str is None:
                     conn.execute("UPDATE fsm_data SET state = NULL WHERE key = ?", (key,))
                 else:
-                    conn.execute("""
+                    conn.execute(
+                        """
                         INSERT INTO fsm_data (key, state, data) VALUES (?, ?, '{}')
                         ON CONFLICT(key) DO UPDATE SET state = excluded.state
-                    """, (key, st_str))
+                        """,
+                        (key, st_str),
+                    )
                 conn.commit()
+
         await asyncio.to_thread(_run)
 
     async def get_state(self, key: str) -> Optional[str]:
@@ -175,17 +198,23 @@ class SQLiteStorage(StateStorage):
                 cur = conn.execute("SELECT state FROM fsm_data WHERE key = ?", (key,))
                 row = cur.fetchone()
                 return row["state"] if row else None
+
         return await asyncio.to_thread(_run)
 
     async def set_data(self, key: str, data: Dict[str, Any]) -> None:
         raw = json.dumps(data)
+
         def _run():
             with self._get_conn() as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     INSERT INTO fsm_data (key, state, data) VALUES (?, NULL, ?)
                     ON CONFLICT(key) DO UPDATE SET data = excluded.data
-                """, (key, raw))
+                    """,
+                    (key, raw),
+                )
                 conn.commit()
+
         await asyncio.to_thread(_run)
 
     async def get_data(self, key: str) -> Dict[str, Any]:
@@ -196,22 +225,51 @@ class SQLiteStorage(StateStorage):
                 if row and row["data"]:
                     try:
                         return json.loads(row["data"])
-                    except Exception:
+                    except (TypeError, ValueError):
                         return {}
                 return {}
+
         return await asyncio.to_thread(_run)
 
     async def update_data(self, key: str, **kwargs: Any) -> Dict[str, Any]:
-        current = await self.get_data(key)
-        current.update(kwargs)
-        await self.set_data(key, current)
-        return current
+        """Merge ``kwargs`` into stored data in a single transaction.
+
+        A get-then-set across two connections races when two handlers
+        update the same user at once; this keeps the read+write under
+        ``BEGIN IMMEDIATE``.
+        """
+
+        def _run():
+            with self._get_conn() as conn:
+                conn.execute("BEGIN IMMEDIATE")
+                cur = conn.execute("SELECT data FROM fsm_data WHERE key = ?", (key,))
+                row = cur.fetchone()
+                current: Dict[str, Any] = {}
+                if row and row["data"]:
+                    try:
+                        current = json.loads(row["data"])
+                    except (TypeError, ValueError):
+                        current = {}
+                current.update(kwargs)
+                raw = json.dumps(current)
+                conn.execute(
+                    """
+                    INSERT INTO fsm_data (key, state, data) VALUES (?, NULL, ?)
+                    ON CONFLICT(key) DO UPDATE SET data = excluded.data
+                    """,
+                    (key, raw),
+                )
+                conn.commit()
+                return current
+
+        return await asyncio.to_thread(_run)
 
     async def clear(self, key: str) -> None:
         def _run():
             with self._get_conn() as conn:
                 conn.execute("DELETE FROM fsm_data WHERE key = ?", (key,))
                 conn.commit()
+
         await asyncio.to_thread(_run)
 
 
@@ -245,3 +303,13 @@ class FSMContext:
 
     def __repr__(self) -> str:
         return f"<FSMContext key={self.key!r}>"
+
+
+__all__ = [
+    "State",
+    "StatesGroup",
+    "StateStorage",
+    "MemoryStorage",
+    "SQLiteStorage",
+    "FSMContext",
+]

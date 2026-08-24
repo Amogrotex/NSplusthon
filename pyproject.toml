@@ -78,7 +78,7 @@ PyPI = "https://pypi.org/project/nsplusthon/"
 
 [tool.setuptools]
 include-package-data = true
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY.md"]
 
 [tool.setuptools.dynamic]
 version = {attr = "nsplusthon.version.__version__"}

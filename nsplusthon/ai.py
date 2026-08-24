@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import inspect
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 API_KEY_PATTERNS = [
     re.compile(r"ghp_[a-zA-Z0-9]{36}"),
+    re.compile(r"github_pat_[a-zA-Z0-9_]{20,}"),
     re.compile(r"sk-[a-zA-Z0-9_]{32,}"),
+    re.compile(r"pypi-[a-zA-Z0-9_\-]{20,}"),
     re.compile(r"\b\d{8,12}:[a-zA-Z0-9_-]{30,50}\b"),
     re.compile(r"\b(?:\+?98|0)?9\d{9}\b"),
 ]
@@ -60,10 +63,14 @@ class IntentRouter:
 
 
 class MultiProviderAI:
-    """Helper wrapper for calling multiple AI provider functions with fallbacks."""
+    """Call a list of provider callables, falling back on the next on failure.
+
+    This is a thin helper, not an SDK. Each provider is ``(prompt) -> str``
+    and may be sync or async.
+    """
 
     def __init__(self, providers: Optional[List[Callable[[str], Any]]] = None):
-        self.providers = providers or []
+        self.providers = list(providers or [])
 
     def add_provider(self, provider_fn: Callable[[str], Any]) -> None:
         self.providers.append(provider_fn)
@@ -76,12 +83,18 @@ class MultiProviderAI:
         for provider in self.providers:
             try:
                 result = provider(prompt)
-                if hasattr(result, "__await__"):
+                if inspect.isawaitable(result):
                     result = await result
-                if result and isinstance(result, str):
-                    return RedactionGuard.sanitize(result)
+                if result is None:
+                    continue
+                text = result if isinstance(result, str) else str(result)
+                if text:
+                    return RedactionGuard.sanitize(text)
             except Exception as e:
                 last_error = e
                 continue
 
         raise RuntimeError(f"All AI providers failed. Last error: {last_error}")
+
+
+__all__ = ["RedactionGuard", "IntentRouter", "MultiProviderAI"]

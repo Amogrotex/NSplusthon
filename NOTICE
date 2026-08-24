@@ -1,0 +1,25 @@
+NSplusthon
+Copyright (C) 2026 AmoGrotex
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version. See the file LICENSE.
+
+Upstream
+--------
+
+NSplusthon is a maintained fork of SPlusthon
+(https://github.com/shayanheidari01/SPlusthon) by Shayan Heidari and
+contributors.
+
+SPlusthon itself is derived from Telethon
+(https://github.com/LonamiWebs/Telethon) by Lonami / LonamiWebs.
+
+The original Telethon source is licensed under the MIT License
+(see THIRD_PARTY.md). Combined with this project's modifications, the
+work as distributed here is licensed under GPL-3.0-or-later.
+
+  Copyright (c) 2016-2024 LonamiWebs
+  Copyright (c) SPlusthon contributors
+  Copyright (C) 2026 AmoGrotex
