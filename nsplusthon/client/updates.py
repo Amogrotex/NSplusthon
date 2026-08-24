@@ -665,13 +665,13 @@ class UpdateMethods:
         # TODO only used for AlbumHack, and MessageBox is not really designed for this
         others = None
 
-        if not self._mb_entity_cache.self_id:
+        if not self._mb_entity_cache.self_id and self._authorized is True:
             # Some updates require our own ID, so we must make sure
             # that the event builder has offline access to it. Calling
             # `get_me()` will cache it under `self._mb_entity_cache`.
             #
-            # It will return `None` if we haven't logged in yet which is
-            # fine, we will just retry next time anyway.
+            # Never call this before login: GetUsersRequest returns 500
+            # on Soroush and the server closes the WebSocket.
             try:
                 await self.get_me(input_peer=True)
             except OSError:
@@ -797,7 +797,14 @@ class UpdateMethods:
                     self._log[__name__].exception('Unhandled exception on %s', name)
 
     async def _handle_auto_reconnect(self: 'SoroushClient'):
-        # Use lightweight get_me to let SoroushPlus know we want updates
+        # GetUsersRequest / get_me poisons the Soroush WebSocket before
+        # the auth key is registered (phone sign-in). Only poke the
+        # server for updates once we actually are logged in.
+        if self._authorized is not True:
+            self._log[__name__].info(
+                'Skipping get_me/catch_up after reconnect (not authorized)')
+            return
+
         try:
             await self.get_me(input_peer=True)
         except Exception as e:

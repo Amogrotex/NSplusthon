@@ -54,3 +54,45 @@ async def test_pong_clears_outstanding_ping():
     pong = types.Pong(msg_id=42, ping_id=ping_id)
     await sender._handle_pong(SimpleNamespace(obj=pong))
     assert sender._ping is None
+
+
+@pytest.mark.asyncio
+async def test_prepare_resend_drops_ping_and_getusers_keeps_signin():
+    """Reconnect must not replay GetUsersRequest (closes Soroush WS)
+    or leftover PingRequest (forces another reconnect)."""
+    from nsplusthon.network.requeststate import RequestState
+
+    sender = _make_sender()
+    sender._ping = 99
+
+    ping = RequestState(functions.PingRequest(1))
+    ping.msg_id = 1
+    users = RequestState(functions.users.GetUsersRequest([types.InputUserSelf()]))
+    users.msg_id = 2
+    signin = RequestState(functions.auth.SignInRequest('98912', 'hash', '12345'))
+    signin.msg_id = 3
+    sender._pending_state = {1: ping, 2: users, 3: signin}
+
+    out = sender._prepare_resend_after_reconnect()
+
+    assert sender._ping is None
+    assert sender._pending_state == {}
+    assert out == [signin]
+    assert ping.future.cancelled()
+    with pytest.raises(ConnectionError, match='GetUsersRequest'):
+        users.future.result()
+    assert not signin.future.done()
+
+
+@pytest.mark.asyncio
+async def test_stale_ping_does_not_force_reconnect_after_prepare():
+    sender = _make_sender()
+    sender._ping = 99
+    started = []
+    sender._start_reconnect = lambda error: started.append(error)
+
+    sender._prepare_resend_after_reconnect()
+    sender._keepalive_ping(7)
+
+    assert started == []
+    assert sender._ping == 7

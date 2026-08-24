@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.2
+
+- Stop the WebSocket reconnect storm during phone sign-in: do not send
+  ``GetUsersRequest`` / ``get_me`` until the account is authorized
+  (Soroush returns 500 and closes the socket).
+- On reconnect, drop stale ``PingRequest`` / ``GetUsersRequest`` instead
+  of replaying them; reset the keepalive ping id so the next ping does
+  not immediately reconnect again.
+- ``get_me`` no longer retries a 500 (one attempt, then ``None``).
+- aiohttp session no longer uses a ``total=`` timeout (that killed a
+  live WebSocket after ``connect_timeout`` seconds). Disabled WebSocket
+  ping frames — Soroush closes on them; MTProto ping is the keepalive.
+
 ## 1.8.1
 
 - FSM ``SQLiteStorage.update_data`` is now a single ``BEGIN IMMEDIATE``
