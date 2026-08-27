@@ -189,9 +189,12 @@ class UserMethods:
                 self._mb_entity_cache.set_self_user(me.id, me.bot, me.access_hash)
 
             return utils.get_input_peer(me, allow_self=False) if input_peer else me
+        # Note: asyncio.CancelledError is deliberately NOT caught here —
+        # swallowing cancellation would let a cancelled get_me() return
+        # None and keep running while shutdown proceeds around it.
         except (errors.UnauthorizedError, errors.AuthKeyError,
                 errors.ServerError, errors.RpcCallFailError,
-                ConnectionError, OSError, asyncio.CancelledError) as e:
+                ConnectionError, OSError) as e:
             _log.debug('Not able to get self user: %s', e)
             return None
 

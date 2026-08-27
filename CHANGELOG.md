@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.8.3
+
+- Fix bot-token login: `auth.importBotAuthorization` was missing from the
+  generated TL schema, so `sign_in(bot_token=...)` /
+  `client.start(bot_token=...)` always raised `AttributeError`.
+  `ImportBotAuthorizationRequest` is now generated and registered.
+- Wire the 1.8.2 reconnect filter into `_reconnect()`: stale
+  `PingRequest` / `GetUsersRequest` are now actually dropped before being
+  re-enqueued on the fresh connection (the filter existed but was never
+  called, so the reconnect storm could still occur).
+- WebSocket: disable WebSocket-level ping frames (`heartbeat=0`). They
+  contradicted the 1.8.2 note that Soroush closes connections that
+  receive them; MTProto `PingRequest` is the keepalive.
+- WebSocket periodic reset (1800 s) now goes through the owning
+  `MTProtoSender`'s reconnect machinery instead of swapping the transport
+  directly, which could race with the sender's loops and spawn two
+  concurrent handshakes on the same connection. A single failed reset no
+  longer kills the reset loop for good.
+- Add a periodic keepalive loop (30 s) to `MTProtoSender` so idle
+  connections (no outgoing RPCs, no incoming updates) are no longer
+  recycled by the 90 s receive watchdog; an unanswered ping after a full
+  interval now triggers a reconnect.
+- `get_me()` no longer swallows `asyncio.CancelledError`.
+- Bot-token/session mismatch warning no longer mis-parses colon-less
+  tokens.
+
 ## 1.8.2
 
 - Stop the WebSocket reconnect storm during phone sign-in: do not send
