@@ -145,7 +145,11 @@ class AuthMethods:
                 me = await self.get_me()
                 if me is not None:
                     if bot_token:
-                        if bot_token[:bot_token.find(':')] != str(me.id):
+                        # Tokens are 'bot_id:access_hash'; compare only
+                        # the id part, and tolerate malformed (colon-less)
+                        # tokens instead of comparing token[:-1].
+                        token_id = bot_token.split(':', 1)[0]
+                        if token_id and token_id != str(me.id):
                             warnings.warn(
                                 'the session already had an authorized user so it did '
                                 'not login to the bot account using the provided bot_token; '

@@ -219,6 +219,11 @@ class ConnectionWebSocket(ObfuscatedConnection):
         self._cached_session_key = None
         self._reconnect_task = None
         self._reconnect_interval = 1800
+        # Set by the MTProtoSender that owns this connection (see
+        # MTProtoSender.connect). When set, the periodic reset below is
+        # delegated to the sender instead of swapping the transport
+        # directly.
+        self._refresh_callback = None
 
     async def _connect(self, timeout=None, ssl=None):
         if aiohttp is None:
@@ -276,8 +281,13 @@ class ConnectionWebSocket(ObfuscatedConnection):
                     url,
                     headers=extra_headers,
                     protocols=["binary"],
-                    max_msg_size=2 ** 24,  # 16 MB
-                    heartbeat=30,          # 30s WebSocket-level keepalive
+                max_msg_size=2 ** 24,  # 16 MB
+                # WebSocket-level ping frames must stay DISABLED
+                # (heartbeat=0): Soroush closes connections that receive
+                # them. Keepalive is the MTProto PingRequest (see
+                # MTProtoSender._keepalive_ping / _keepalive_loop), which
+                # is what the peer is expected to pong.
+                heartbeat=0,
                 ),
                 timeout=timeout
             )
@@ -349,6 +359,21 @@ class ConnectionWebSocket(ObfuscatedConnection):
                 if not self._connected:
                     break
                 _log.info('Resetting WebSocket connection (every %ds)', self._reconnect_interval)
+                if self._refresh_callback is not None:
+                    # Coordinated reset: the owning sender suspends its
+                    # send/recv loops for the duration of the handshake.
+                    # Swapping the transport directly under a live sender
+                    # would race with it (its send loop would observe the
+                    # transient _connected == False, treat the connection
+                    # as dead, and spawn a second concurrent handshake).
+                    # On success the sender's reconnect cancels this task
+                    # and spawns a fresh reset loop; on failure we simply
+                    # retry on the next cycle.
+                    try:
+                        await self._refresh_callback()
+                    except Exception as e:
+                        _log.warning('WebSocket periodic refresh failed: %s', e)
+                    continue
                 try:
                     await self.disconnect()
                 except Exception as e:
@@ -359,8 +384,9 @@ class ConnectionWebSocket(ObfuscatedConnection):
                     # this one is still running.
                     await self.connect()
                 except Exception as e:
+                    # Keep the reset loop alive: retry on the next cycle
+                    # instead of giving up after one transient failure.
                     _log.warning('WebSocket reconnect failed: %s', e)
-                    break
         except asyncio.CancelledError:
             pass
 

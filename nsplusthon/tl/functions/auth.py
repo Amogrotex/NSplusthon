@@ -272,6 +272,47 @@ class ImportAuthorizationRequest(TLRequest):
         return cls(id=_id, bytes=_bytes)
 
 
+class ImportBotAuthorizationRequest(TLRequest):
+    CONSTRUCTOR_ID = 0x141e2a1b
+    SUBCLASS_OF_ID = 0xb9e04e39
+
+    def __init__(self, flags: int, bot_auth_token: str, api_id: int, api_hash: str):
+        """
+        :returns auth.Authorization: Instance of either Authorization, AuthorizationSignUpRequired.
+        """
+        self.flags = flags
+        self.bot_auth_token = bot_auth_token
+        self.api_id = api_id
+        self.api_hash = api_hash
+
+    def to_dict(self):
+        return {
+            '_': 'ImportBotAuthorizationRequest',
+            'flags': self.flags,
+            'bot_auth_token': self.bot_auth_token,
+            'api_id': self.api_id,
+            'api_hash': self.api_hash
+        }
+
+    def _bytes(self):
+        return b''.join((
+            b'\x1b*\x1e\x14',
+            struct.pack('<i', self.flags),
+            self.serialize_bytes(self.bot_auth_token),
+            struct.pack('<i', self.api_id),
+            self.serialize_bytes(self.api_hash),
+        ))
+
+    @classmethod
+    def from_reader(cls, reader):
+        _flags = reader.read_int()
+        _bot_auth_token = reader.tgread_string()
+        _api_id = reader.read_int()
+        _api_hash = reader.tgread_string()
+        return cls(flags=_flags, bot_auth_token=_bot_auth_token,
+                   api_id=_api_id, api_hash=_api_hash)
+
+
 class ImportLoginTokenRequest(TLRequest):
     CONSTRUCTOR_ID = 0x95ac5ce4
     SUBCLASS_OF_ID = 0x6b55f636

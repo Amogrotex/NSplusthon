@@ -594,6 +594,7 @@ tlobjects = {
     0x5e0fb7b9: types.messages.HistoryImportParsed,
     0x9299359f: types.HttpWait,
     0xa57a7dad: functions.auth.ImportAuthorizationRequest,
+    0x141e2a1b: functions.auth.ImportBotAuthorizationRequest,
     0x6c50051c: functions.messages.ImportChatInviteRequest,
     0x2c800be5: functions.contacts.ImportContactsRequest,
     0x95ac5ce4: functions.auth.ImportLoginTokenRequest,

@@ -31,6 +31,7 @@ from ..helpers import retry_range
 
 
 _RECV_TIMEOUT = 90  # seconds; triggers reconnection if no data received
+_KEEPALIVE_INTERVAL = 30  # seconds between keepalive pings
 
 
 class MTProtoSender:
@@ -66,6 +67,9 @@ class MTProtoSender:
         # at construction time; the lock is first used in connect() (in a loop)
         self._connect_lock = None
         self._ping = None
+        # Seconds between keepalive pings (overridable in tests).
+        self._keepalive_interval = _KEEPALIVE_INTERVAL
+        self._keepalive_loop_handle = None
 
         # Whether the user has explicitly connected or disconnected.
         #
@@ -141,6 +145,12 @@ class MTProtoSender:
                 return False
 
             self._connection = connection
+            # Let the transport's periodic reset (WebSocket) go through
+            # this sender so its send/recv loops are suspended for the
+            # duration of the handshake. Transports without a periodic
+            # reset do not define the hook and need none.
+            if hasattr(connection, '_refresh_callback'):
+                connection._refresh_callback = self._periodic_refresh
             await self._connect()
             self._user_connected = True
             return True
@@ -294,6 +304,13 @@ class MTProtoSender:
         self._log.debug('Starting receive loop')
         self._recv_loop_handle = loop.create_task(self._recv_loop())
 
+        # Keepalive runs independently of outgoing traffic: an idle
+        # connection with no updates and no outgoing RPCs would
+        # otherwise receive no data for _RECV_TIMEOUT seconds and be
+        # recycled by the _recv_loop watchdog.
+        self._log.debug('Starting keepalive loop')
+        self._keepalive_loop_handle = loop.create_task(self._keepalive_loop())
+
         # _disconnected only completes after manual disconnection
         # or errors after which the sender cannot continue such
         # as failing to reconnect or any unexpected error.
@@ -357,7 +374,8 @@ class MTProtoSender:
             await helpers._cancel(
                 self._log,
                 send_loop_handle=self._send_loop_handle,
-                recv_loop_handle=self._recv_loop_handle
+                recv_loop_handle=self._recv_loop_handle,
+                keepalive_loop_handle=self._keepalive_loop_handle
             )
 
             self._log.info('Disconnection from %s complete!', self._connection)
@@ -379,13 +397,19 @@ class MTProtoSender:
         await helpers._cancel(
             self._log,
             send_loop_handle=self._send_loop_handle,
-            recv_loop_handle=self._recv_loop_handle
+            recv_loop_handle=self._recv_loop_handle,
+            keepalive_loop_handle=self._keepalive_loop_handle
         )
 
         # Start with a clean state (and thus session ID) to avoid old msgs
         self._state.reset()
         # A leftover ping id would make the next keepalive treat this
         # fresh socket as dead and immediately reconnect again.
+        # (The stale Ping/GetUsers requests themselves are filtered out
+        # right before they are re-enqueued on the fresh connection —
+        # see _prepare_resend_after_reconnect — while ``_pending_state``
+        # stays intact so a failed reconnect can still fail every
+        # pending future via _disconnect.)
         self._ping = None
 
         # Give the server a moment to finish tearing the old WebSocket
@@ -423,8 +447,11 @@ class MTProtoSender:
 
                 await asyncio.sleep(self._delay)
             else:
-                self._send_queue.extend(self._pending_state.values())
-                self._pending_state.clear()
+                # Only the requests that are safe to replay on a fresh
+                # connection go back on the wire; stale keepalive pings
+                # and pre-login GetUsers requests are dropped (replaying
+                # them is what caused the 1.8.2-era reconnect storm).
+                self._send_queue.extend(self._prepare_resend_after_reconnect())
 
                 # Clear the reconnecting flag NOW so the new send/recv loops
                 # (started by _connect above) don't exit on their first
@@ -491,6 +518,20 @@ class MTProtoSender:
                 'Dropped %d stale Ping/GetUsers request(s) on reconnect', dropped)
         return to_resend
 
+    async def _periodic_refresh(self):
+        """
+        Coordinated periodic transport refresh.
+
+        Installed as the WebSocket connection's ``_refresh_callback``.
+        Routed through this sender's reconnect machinery so the send/recv
+        loops are suspended for the duration of the handshake. A raw
+        transport-level reset under a live sender would race with it (the
+        send loop would observe the transient ``_connected == False``,
+        treat the connection as dead, and spawn a second concurrent
+        handshake on the same connection instance).
+        """
+        self._start_reconnect(TimeoutError('periodic WebSocket refresh'))
+
     def _start_reconnect(self, error):
         """Starts a reconnection in the background."""
         if self._user_connected and not self._reconnecting:
@@ -515,6 +556,35 @@ class MTProtoSender:
             self.send(PingRequest(rnd_id))
         else:
             self._start_reconnect(None)
+
+    async def _keepalive_loop(self):
+        """
+        Sends a keep-alive ping every ``_keepalive_interval`` seconds,
+        even when the client has no outgoing traffic of its own.
+
+        This keeps the ``_RECV_TIMEOUT`` watchdog in ``_recv_loop``
+        satisfied on idle-but-healthy connections (the pong is incoming
+        data), and turns the outstanding-ping check in
+        ``_keepalive_ping`` into a real liveness probe: a ping that is
+        still unanswered after a full interval means the peer is dead.
+        """
+        while self._user_connected and not self._reconnecting:
+            await asyncio.sleep(self._keepalive_interval)
+            if not self._user_connected or self._reconnecting:
+                return
+            if self._ping is not None:
+                self._log.warning(
+                    'Keepalive ping unanswered for %ds, reconnecting',
+                    self._keepalive_interval)
+                self._start_reconnect(
+                    TimeoutError('keepalive ping not acknowledged'))
+                return
+            try:
+                self._keepalive_ping(helpers.generate_random_long())
+            except ConnectionError:
+                # Disconnected while waking up; the loops are being
+                # torn down anyway.
+                return
 
     # Loops
 

@@ -1280,6 +1280,7 @@ auth.logOut#3e72ba19 = auth.LoggedOut;
 auth.resetAuthorizations#9fab0d1a = Bool;
 auth.exportAuthorization#e5bfffcd dc_id:int = auth.ExportedAuthorization;
 auth.importAuthorization#a57a7dad id:long bytes:bytes = auth.Authorization;
+auth.importBotAuthorization#141e2a1b flags:# bot_auth_token:string api_id:int api_hash:string = auth.Authorization;
 auth.bindTempAuthKey#cdd42a05 perm_auth_key_id:long nonce:long expires_at:int encrypted_message:bytes = Bool;
 auth.checkPassword#d18b4d16 password:InputCheckPasswordSRP = auth.Authorization;
 auth.requestPasswordRecovery#d897bc66 = auth.PasswordRecovery;
