@@ -46,6 +46,42 @@ async def test_send_message_with_file_forwards_args():
 
 class TestMessageMethods:
     @pytest.mark.asyncio
+    async def test_delete_messages_bulk_chunks_and_sleeps(self):
+        # Regression: delete_messages_bulk called `asyncio.sleep` without
+        # importing asyncio, raising NameError as soon as a second chunk
+        # had to be sent with delay > 0.
+        from nsplusthon.client.messages import MessageMethods
+
+        calls = []
+
+        async def fake_delete(entity, chunk, revoke=True):
+            calls.append(chunk)
+            return list(chunk)
+
+        client = MessageMethods()
+        client._log = mock.MagicMock()
+        client.delete_messages = fake_delete
+
+        with mock.patch("asyncio.sleep", new=mock.AsyncMock()) as sleep:
+            total = await client.delete_messages_bulk(
+                "somechat", list(range(250)), chunk_size=100,
+                delay=0.01, revoke=True,
+            )
+
+        assert total == 250
+        assert len(calls) == 3
+        assert sleep.await_count == 2  # one pause between the 3 chunks
+
+    @pytest.mark.asyncio
+    async def test_delete_messages_bulk_empty_input(self):
+        from nsplusthon.client.messages import MessageMethods
+        client = MessageMethods()
+        client.delete_messages = mock.AsyncMock()
+        assert await client.delete_messages_bulk("somechat", []) == 0
+        client.delete_messages.assert_not_awaited()
+
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         'formatting_entities',
         ([MessageEntityBold(offset=0, length=0)], None)
