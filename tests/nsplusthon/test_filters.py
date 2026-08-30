@@ -25,6 +25,31 @@ async def test_text_and_regex_filters():
 
 
 @pytest.mark.asyncio
+async def test_text_filter_endswith_and_case_sensitivity():
+    # Regression: `endswith` iterated with the wrong loop variable
+    # (`e.lower()`) and raised NameError at runtime.
+    t_filter = TextFilter(endswith="bye")
+    assert await t_filter(MockEvent(text="goodbye")) is True
+    assert await t_filter(MockEvent(text="good night")) is False
+
+    # Multiple suffixes, case-sensitive mode
+    multi = TextFilter(endswith=["bye", "night"], ignore_case=False)
+    assert await multi(MockEvent(text="goodnight")) is True
+    assert await multi(MockEvent(text="goodNight")) is False
+
+    # startswith with a list of prefixes
+    starts = TextFilter(startswith=["good", "ok"])
+    assert await starts(MockEvent(text="goodbye")) is True
+    assert await starts(MockEvent(text="okay thanks")) is True
+    assert await starts(MockEvent(text="nope")) is False
+
+    # equals / contains / choices still behave
+    eq = TextFilter(equals="HELLO")  # ignore_case defaults to True
+    assert await eq(MockEvent(text="hello")) is True
+    assert await eq(MockEvent(text="world")) is False
+
+
+@pytest.mark.asyncio
 async def test_combined_filters():
     f_group = ChatTypeFilter.group()
     f_reply = IsReplyFilter()

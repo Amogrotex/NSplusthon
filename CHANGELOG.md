@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.3
+
+- Fix ``NameError`` in ``TextFilter`` when ``endswith`` is used: the loop
+  iterated over the wrong variable (``e.lower()`` instead of ``s.lower()``).
+- Fix ``NameError`` in ``MessageMethods.delete_messages_bulk``: ``asyncio``
+  was used to pause between chunks but never imported, crashing as soon as
+  more than one chunk had to be sent with ``delay > 0``.
+- Regression tests for both code paths.
+
 ## 1.8.2
 
 - Stop the WebSocket reconnect storm during phone sign-in: do not send

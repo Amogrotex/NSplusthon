@@ -96,7 +96,7 @@ class TextFilter(Filter):
                 return False
             if self.startswith is not None and not any(text_cmp.startswith(s.lower()) for s in self.startswith):
                 return False
-            if self.endswith is not None and not any(text_cmp.endswith(e.lower()) for s in self.endswith):
+            if self.endswith is not None and not any(text_cmp.endswith(s.lower()) for s in self.endswith):
                 return False
             if self.choices is not None and text_cmp not in {c.lower() for c in self.choices}:
                 return False
