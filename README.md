@@ -27,6 +27,7 @@ Maintained fork of [SPlusthon](https://github.com/shayanheidari01/SPlusthon), it
 - **Interactive Conversations**: Linear multi-step conversation handler (`async with client.conversation(chat)`).
 - **Client Pool**: Manage multiple accounts with client pooling and message broadcasting.
 - **Inline Keyboards & Paginator**: Clean keyboard builder and paginated inline menu layout.
+- **Anonymous Chat**: Random 1-on-1 friend matching with anonymous profiles, preference-aware pairing, ratings, reports with auto-ban, and blocking — bilingual (fa/en) out of the box.
 - **Soroush Plus Detection**: Link parser and entity classifier for Soroush Plus URLs, URIs, and user IDs.
 
 ---
@@ -123,6 +124,54 @@ from nsplusthon.paginator import Paginator
 paginator = Paginator(items=["Item 1", "Item 2", "Item 3"], page_size=2)
 keyboard = paginator.build_keyboard(current_page=1, callback_prefix="page")
 ```
+
+### Anonymous Chat
+
+`nsplusthon.anonchat` pairs users up for anonymous 1-on-1 conversations. The
+core performs **no I/O** — every method returns a result object describing what
+should happen — so you decide how to render and send it.
+
+```python
+from nsplusthon import SoroushClient, events
+from nsplusthon.anonchat import (
+    AnonChatManager, SQLiteProfileStore, render_profile_card, tr,
+)
+
+client = SoroushClient("anon_session")
+manager = AnonChatManager(SQLiteProfileStore("anon_profiles.db"))
+
+@client.on(events.NewMessage(pattern=r"^/search$"))
+async def search(event):
+    result = await manager.start_search(event.sender_id)
+    if result.matched:
+        # Show each side the *other* person's anonymous card.
+        partner_id = result.session.partner_of(event.sender_id)
+        await event.respond(render_profile_card(result.partner, "fa"))
+        await client.send_message(
+            partner_id,
+            render_profile_card(await manager.get_profile(event.sender_id), "fa"),
+        )
+    else:
+        await event.respond(tr("fa", "queued", position=result.queue_position))
+
+@client.on(events.NewMessage(incoming=True))
+async def relay(event):
+    if (event.raw_text or "").startswith("/"):
+        return
+    result = await manager.relay(event.sender_id, text=event.raw_text)
+    if result.delivered:
+        await client.send_message(result.to, result.text)
+    elif result.reason == manager.REASON_LINK:
+        await event.respond(tr("fa", "link_blocked"))
+```
+
+A complete, runnable bot — profile wizard, ratings, reports, blocking and
+inline buttons — lives in [`nsplusthon_examples/anon_chat.py`](nsplusthon_examples/anon_chat.py).
+
+Anonymous by construction: the module never reads `first_name`, `last_name` or
+`username`, and partners are identified only by nickname. Media is re-sent
+rather than forwarded, because a forward carries the original sender's
+identity.
 
 ---
 

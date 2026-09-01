@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.9.0
+
+### Added
+
+- **`nsplusthon.anonchat`** — anonymous 1-on-1 chat: random friend matching
+  with anonymous profiles (nickname, age, gender, city, bio, interests,
+  avatar, rating).
+  - `MatchMaker` scores candidates on shared interests, satisfied gender
+    preference, age range and mutual rating, but only after *both* users'
+    hard filters pass. `avoid_previous_partners` skips past partners while
+    other options exist, then falls back to a rematch rather than leaving
+    someone waiting forever.
+  - `AnonChatManager` orchestrates search, relay, next/stop, ratings,
+    reports and blocking. It performs no I/O: every method returns a result
+    object, so the caller decides how to render and send it.
+  - `MemoryProfileStore` and `SQLiteProfileStore` backends.
+  - Safety: per-chat flood limiting, minimum message spacing, link/invite/
+    phone-number blocking, Persian profanity filtering, de-duplicated
+    reports with auto-ban, and blocks that prevent future pairing.
+  - Bilingual strings (`fa`/`en`) plus `render_profile_card` and
+    `inline_keyboard` helpers.
+- **`nsplusthon_examples/anon_chat.py`** — a complete bot built on the new
+  module: `/start` profile wizard, `/search`, `/next`, `/stop`, `/rate`,
+  `/report`, `/block`, `/lang`, `/stats` and inline-button controls.
+- `anonchat` added to the package's lazy public API (`from nsplusthon import anonchat`).
+- 85 new tests (120 → 205), covering the module directly and driving the
+  example bot's real handlers through a fake client. New-code coverage 93%.
+
+### Notes
+
+- Anonymity is a design constraint, not a convention: the module never reads
+  `first_name`, `last_name` or `username`, and `render_profile_card` cannot
+  emit them. The example re-sends media instead of forwarding it, because a
+  forward carries the original sender's identity.
+- `SQLiteProfileStore` closes its connections via `contextlib.closing`.
+  (`fsm.SQLiteStorage` still relies on `with conn:` for commit only, which
+  does not close — unchanged here, but worth noting.)
+
+
 ## 1.8.3
 
 - Fix ``NameError`` in ``TextFilter`` when ``endswith`` is used: the loop
