@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Fix SQLite session reload column order for temporary auth keys and takeout IDs.
+- Fix the temporary-key property returning the permanent auth key.
+- Persist verified credentials and self-user state before optional update RPCs;
+  retain successful login when initial update requests fail transiently.
+- Skip pre-login get_me for code-only, password, and bot-token sign-in.
+- Do not erase auth keys or resend codes on an invalid-phone error.
+- Do not cache transient authorization-check failures as logged-out sessions;
+  invalidate the authorization cache when a new auth key is generated.
+- Explicitly save session state before closing on disconnect.
+- Add 13 offline regression cases for login persistence and auth checks.
+
 ## 1.8.3
 
 - Fix ``NameError`` in ``TextFilter`` when ``endswith`` is used: the loop

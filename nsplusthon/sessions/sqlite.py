@@ -62,7 +62,8 @@ class SQLiteSession(MemorySession):
                 self.save()
 
             # These values will be saved
-            c.execute('select * from sessions')
+            c.execute('select dc_id, server_address, port, auth_key, '
+                      'tmp_auth_key, takeout_id from sessions')
             tuple_ = c.fetchone()
             if tuple_:
                 self._dc_id, self._server_address, self._port, key, tmp_key, \
