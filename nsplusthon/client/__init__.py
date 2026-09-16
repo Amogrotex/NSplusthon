@@ -22,4 +22,5 @@ from .downloads import DownloadMethods
 from .account import AccountMethods
 from .auth import AuthMethods
 from .bots import BotMethods
+from .contacts import ContactMethods
 from .soroushclient import SoroushClient

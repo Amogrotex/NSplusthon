@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Add get_contacts with local name/username/phone search and result limiting.
+- Add validated add_contact/import_contacts helpers with import/retry mappings,
+  Iranian phone normalization and Persian/Arabic digit support.
+- Add invite_to_group for selected users in groups, supergroups and channels,
+  with per-user reports, deduplication and stop-on-flood/permission failures.
+- Honor per-request flood_sleep_threshold for both cached and fresh waits;
+  do not bypass short unexpired flood waits or retry server errors when the
+  caller explicitly requests zero retries.
+- See [contacts and invitations guide](docs/guides/contacts-and-invites.md).
+
 ## 1.8.3
 
 - Fix ``NameError`` in ``TextFilter`` when ``endswith`` is used: the loop
