@@ -239,7 +239,7 @@ class UserMethods:
                 # Any request that requires authorization will work
                 await self(functions.updates.GetStateRequest())
                 self._authorized = True
-            except errors.RPCError as e:
+            except errors.UnauthorizedError as e:
                 _log.debug('Authorization check failed: %s', e)
                 self._authorized = False
             except Exception:

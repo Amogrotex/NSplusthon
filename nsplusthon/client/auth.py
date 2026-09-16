@@ -1,3 +1,4 @@
+import asyncio
 import getpass
 import inspect
 import logging
@@ -205,18 +206,6 @@ class AuthMethods:
             except errors.SessionPasswordNeededError:
                 two_step_detected = True
                 break
-            except errors.PhoneNumberInvalidError:
-                # Soroush server may close the WebSocket during SignInRequest.
-                # Reconnect and re-send the code request.
-                self._phone_code_hash.clear()
-                self._authorized = False
-                await self.disconnect()
-                self._sender.auth_key.key = None
-                self.session.auth_key = None
-                await self.connect()
-                await self.send_code_request(phone, force_sms=force_sms)
-                print('Connection was lost. A new code has been sent.',
-                      file=sys.stderr)
             except (errors.PhoneCodeEmptyError,
                     errors.PhoneCodeExpiredError,
                     errors.PhoneCodeHashEmptyError,
@@ -340,13 +329,13 @@ class AuthMethods:
                 await client.sign_in(phone, code)
         """
         me = None
-        # When phone+code are provided we know we need to sign in.
+        # Explicit credentials (including code-only and 2FA) mean sign in.
         # Skip the get_me() pre-check to avoid an unnecessary
         # GetUsersRequest — on Soroush this triggers
         # AuthKeyUnregisteredError and the subsequent server-side
         # processing appears to close the WebSocket before
         # SignInRequest can complete.
-        if not (phone and code):
+        if not (code or password or bot_token):
             try:
                 me = await self.get_me()
             except Exception as e:
@@ -404,25 +393,8 @@ class AuthMethods:
                     me = None
                 if me:
                     return await self._on_login(me)
-                # Authorized but can't fetch user info (Soroush limitation).
-                # Initialize message box via GetState so updates still work.
-                try:
-                    state = await self(functions.updates.GetStateRequest())
-                    difference = await self(functions.updates.GetDifferenceRequest(
-                        pts=state.pts, date=state.date, qts=state.qts))
-                    if isinstance(difference, types.updates.Difference):
-                        state = difference.state
-                    elif isinstance(difference, types.updates.DifferenceSlice):
-                        state = difference.intermediate_state
-                    elif isinstance(difference, types.updates.DifferenceTooLong):
-                        state.pts = difference.pts
-                    self._message_box.load(
-                        SessionState(0, 0, 0, state.pts, state.qts,
-                                     int(state.date.timestamp()), state.seq, 0),
-                        [])
-                except Exception as e:
-                    _log.debug('Failed to initialize message box during login: %s', e)
-                return None
+                # Finalize and persist even when the server cannot return a user.
+                return await self._on_login(None)
             raise
 
         if isinstance(result, types.auth.AuthorizationSignUpRequired):
@@ -451,22 +423,48 @@ class AuthMethods:
 
         Returns the input user parameter.
         """
-        self._mb_entity_cache.set_self_user(user.id, user.bot, user.access_hash)
+        if user is not None:
+            self._mb_entity_cache.set_self_user(user.id, user.bot, user.access_hash)
+            await utils.maybe_async(self.session.process_entities([user]))
         self._authorized = True
 
-        state = await self(functions.updates.GetStateRequest())
-        # the server may send an old qts in getState
-        difference = await self(functions.updates.GetDifferenceRequest(pts=state.pts, date=state.date, qts=state.qts))
+        # Commit the verified credentials before optional update RPCs. A server
+        # error after SignIn must not make a successful login look like failure.
+        self.session.auth_key = self._sender.auth_key
+        await self._save_states_and_entities()
+        await utils.maybe_async(self.session.save())
+        self._phone_code_hash.clear()
 
-        if isinstance(difference, types.updates.Difference):
-            state = difference.state
-        elif isinstance(difference, types.updates.DifferenceSlice):
-            state = difference.intermediate_state
-        elif isinstance(difference, types.updates.DifferenceTooLong):
-            state.pts = difference.pts
+        try:
+            state = await self(functions.updates.GetStateRequest())
+        except errors.UnauthorizedError:
+            self._authorized = False
+            raise
+        except (errors.RPCError, OSError, asyncio.TimeoutError) as e:
+            _log.warning('Logged in, but initial update state is unavailable: %s', e)
+            return user
 
-        self._message_box.load(SessionState(0, 0, 0, state.pts, state.qts, int(state.date.timestamp()), state.seq, 0), [])
+        try:
+            # The server may send an old qts in getState.
+            difference = await self(functions.updates.GetDifferenceRequest(
+                pts=state.pts, date=state.date, qts=state.qts))
+        except errors.UnauthorizedError:
+            self._authorized = False
+            raise
+        except (errors.RPCError, OSError, asyncio.TimeoutError) as e:
+            _log.warning('Logged in, but initial update difference is unavailable: %s', e)
+        else:
+            if isinstance(difference, types.updates.Difference):
+                state = difference.state
+            elif isinstance(difference, types.updates.DifferenceSlice):
+                state = difference.intermediate_state
+            elif isinstance(difference, types.updates.DifferenceTooLong):
+                state.pts = difference.pts
 
+        self._message_box.load(SessionState(
+            0, 0, 0, state.pts, state.qts, int(state.date.timestamp()), state.seq, 0), [])
+        await self._save_states_and_entities()
+        await utils.maybe_async(self.session.save())
         return user
 
     async def send_code_request(

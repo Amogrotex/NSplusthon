@@ -799,6 +799,7 @@ class SoroushPlusBaseClient(abc.ABC):
             self._event_handler_tasks.clear()
 
         await self._save_states_and_entities()
+        await utils.maybe_async(self.session.save())
 
         await utils.maybe_async(self.session.close())
 
@@ -835,6 +836,7 @@ class SoroushPlusBaseClient(abc.ABC):
         Callback from the sender whenever it needed to generate a
         new authorization key. This means we are not authorized.
         """
+        self._authorized = None
         self.session.auth_key = auth_key
         await utils.maybe_async(self.session.save())
 
