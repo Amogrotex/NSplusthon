@@ -31,7 +31,8 @@ def _fmt_flood(delay, request, *, early=False, td=datetime.timedelta):
 
 class UserMethods:
     async def __call__(self: 'SoroushClient', request, ordered=False, flood_sleep_threshold=None):
-        return await self._call(self._sender, request, ordered=ordered)
+        return await self._call(self._sender, request, ordered=ordered,
+                                flood_sleep_threshold=flood_sleep_threshold)
 
     async def _call(self: 'SoroushClient', sender, request, ordered=False, flood_sleep_threshold=None,
                    request_retries=None):
@@ -52,7 +53,7 @@ class UserMethods:
             if r.CONSTRUCTOR_ID in self._flood_waited_requests:
                 due = self._flood_waited_requests[r.CONSTRUCTOR_ID]
                 diff = round(due - time.time())
-                if diff <= 3:  # Flood waits below 3 seconds are "ignored"
+                if diff <= 0:  # Only expired waits may be ignored
                     self._flood_waited_requests.pop(r.CONSTRUCTOR_ID, None)
                 elif diff <= flood_sleep_threshold:
                     self._log[__name__].info(*_fmt_flood(diff, r, early=True))
@@ -104,6 +105,8 @@ class UserMethods:
                     errors.RpcMcgetFailError, errors.InterdcCallErrorError,
                     errors.TimedOutError,
                     errors.InterdcCallRichErrorError) as e:
+                if request_retries == 0:
+                    raise
                 last_error = e
                 self._log[__name__].warning(
                     'SoroushPlus is having internal issues %s: %s',
@@ -126,7 +129,7 @@ class UserMethods:
                 if e.seconds == 0:
                     e.seconds = 1
 
-                if e.seconds <= self.flood_sleep_threshold:
+                if e.seconds <= flood_sleep_threshold:
                     self._log[__name__].info(*_fmt_flood(e.seconds, request))
                     await asyncio.sleep(e.seconds)
                 else:

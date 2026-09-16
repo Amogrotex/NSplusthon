@@ -129,3 +129,9 @@ keyboard = paginator.build_keyboard(current_page=1, callback_prefix="page")
 ## License
 
 [GPL-3.0](LICENSE). Copyright (C) 2026 AmoGrotex. Upstream Telethon is MIT — see [NOTICE](NOTICE).
+
+### Contact management and member invitations
+
+Use `get_contacts`, `add_contact`, `import_contacts`, and `invite_to_group`
+for explicit contact management and group/channel invitations. See the
+[usage guide and error-handling examples](docs/guides/contacts-and-invites.md).
